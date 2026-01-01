@@ -1,5 +1,8 @@
 [[headers]]
+  # Применяем правила ко всем файлам сайта
   for = "/*"
   [headers.values]
+    # 1. Разрешаем iframe ТОЛЬКО для OK.ru (старый стандарт)
     X-Frame-Options = "ALLOW-FROM https://ok.ru"
+    # 2. Разрешаем iframe для OK.ru и всех его поддоменов (современный стандарт)
     Content-Security-Policy = "frame-ancestors https://ok.ru https://*.ok.ru;"
