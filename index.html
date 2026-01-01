@@ -66,5 +66,21 @@
     </div>
 
     <script src="app.js"></script>
+    <script>
+// Принудительная проверка если мы в iframe
+if (window.self !== window.top) {
+    console.log('Мы в iframe! Перезагружаем для получения параметров OK.ru');
+    
+    // Если нет параметров в URL, пробуем получить их
+    if (!window.location.search.includes('apiconnection')) {
+        // Пробуем получить от родительского окна
+        try {
+            window.parent.postMessage({ type: 'get_ok_params' }, '*');
+        } catch (e) {
+            console.log('Не удалось связаться с родительским окном');
+        }
+    }
+}
+</script>
 </body>
 </html>
