@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ВМесте | Одноклассники</title>
     
-    <!-- ОБЯЗАТЕЛЬНО для OK.ru -->
-    <script src="https://connect.ok.ru/connect.js" type="text/javascript" charset="UTF-8"></script>
+    <!-- ОБЯЗАТЕЛЬНО: FAPI5 SDK для OK.ru -->
+    <script type="text/javascript" src="//api.ok.ru/js/fapi5.js" defer="defer"></script>
     
     <!-- Ваши стили -->
     <link rel="stylesheet" href="style.css">
@@ -15,75 +15,56 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
-        /* Скрываем scrollbar в iframe OK.ru */
         body {
             margin: 0;
-            padding: 0;
-            overflow-x: hidden;
+            padding: 15px;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: white;
+            min-height: 100vh;
         }
         
-        /* OK.ru требует определенные стили для iframe */
-        .ok-frame {
-            width: 100%;
-            min-height: 100vh;
-            background: white;
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #ed812b;
+            text-align: center;
+        }
+        
+        .ok-button {
+            background: #ed812b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
         }
     </style>
 </head>
-<body class="ok-frame">
-    <div id="app">
-        <div class="container">
-            <h1>🌊 ВМесте</h1>
-            <p>Приложение для знакомств через анонимные послания</p>
-            
-            <div id="auth-section">
-                <button id="ok-login-btn" class="ok-button">
-                    Войти через Одноклассники
-                </button>
-            </div>
-            
-            <div id="content" style="display: none;">
-                <!-- Контент приложения -->
-            </div>
-            
-            <div id="status"></div>
+<body>
+    <div id="app" class="container">
+        <h1>🌊 ВМесте</h1>
+        <p>Приложение для знакомств через анонимные послания</p>
+        
+        <div id="loading">Загрузка OK API...</div>
+        
+        <div id="auth-section" style="display: none;">
+            <button onclick="loginWithOK()" class="ok-button">
+                Войти через Одноклассники
+            </button>
         </div>
+        
+        <div id="content" style="display: none;">
+            <!-- Контент приложения появится здесь -->
+        </div>
+        
+        <div id="status"></div>
     </div>
 
     <script src="app.js"></script>
-    
-    <!-- Инициализация OK API -->
-    <script>
-        // Проверяем, что мы в iframe OK.ru
-        const isInOKFrame = window.location !== window.parent.location;
-        
-        if (isInOKFrame) {
-            console.log('🚀 Приложение запущено в OK.ru iframe');
-            
-            // Инициализируем OK API когда DOM загружен
-            document.addEventListener('DOMContentLoaded', function() {
-                try {
-                    // ОБЯЗАТЕЛЬНАЯ инициализация для OK.ru
-                    OK.init({
-                        appId: '512004353381',
-                        appKey: 'НУЖЕН_ПУБЛИЧНЫЙ_КЛЮЧ', // Замените на реальный
-                        callback: window.location.origin,
-                        scope: 'VALUABLE'
-                    });
-                    
-                    console.log('✅ OK API инициализирован');
-                    
-                    // Показываем кнопку входа
-                    document.getElementById('ok-login-btn').style.display = 'block';
-                    
-                } catch (error) {
-                    console.error('❌ Ошибка инициализации OK API:', error);
-                    document.getElementById('status').innerHTML = 
-                        '<p style="color:red">Ошибка инициализации OK API. Проверьте Console.</p>';
-                }
-            });
-        }
-    </script>
 </body>
 </html>
