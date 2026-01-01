@@ -1,166 +1,23 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌊 ВМесте | Одноклассники</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="https://connect.ok.ru/connect.js"></script>
-    <style>
-        * {
-            margin: 0;
+<script>
+// Проверка, открыто ли приложение в iframe OK.ru
+if (window.self !== window.top) {
+    console.log('✅ Приложение открыто в iframe OK.ru');
+    document.body.classList.add('in-ok-iframe');
+    
+    // Можно добавить специфичные стили для iframe
+    const style = document.createElement('style');
+    style.textContent = `
+        .in-ok-iframe .container {
+            border-radius: 0;
+            padding: 20px;
+            max-width: 100%;
+        }
+        .in-ok-iframe body {
             padding: 0;
-            box-sizing: border-box;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 20px 80px rgba(0,0,0,0.2);
-        }
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        h1 {
-            color: #764ba2;
-            font-size: 42px;
-            margin-bottom: 10px;
-        }
-        .subtitle {
-            color: #666;
-            font-size: 18px;
-            margin-bottom: 30px;
-        }
-        .status-card {
-            background: #f8f9fa;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 30px;
-            border-left: 5px solid #ed812b;
-        }
-        .btn {
-            display: inline-block;
-            padding: 16px 32px;
-            background: linear-gradient(135deg, #ed812b, #f5a623);
-            color: white;
-            text-decoration: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-            margin: 10px 0;
-            width: 100%;
-            max-width: 400px;
-        }
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(237, 129, 43, 0.3);
-        }
-        .btn-supabase {
-            background: linear-gradient(135deg, #3ecf8e, #20c997);
-        }
-        .section {
-            margin: 30px 0;
-            padding: 25px;
-            background: #f8f9fa;
-            border-radius: 16px;
-        }
-        .code-block {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 15px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-        }
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            color: #666;
-            font-size: 14px;
-        }
-        .hidden { display: none; }
-        .visible { display: block; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🌊 ВМесте</h1>
-            <p class="subtitle">Приложение для знакомств через анонимные послания</p>
-        </header>
-        
-        <div class="status-card">
-            <h3>📊 Статус развертывания</h3>
-            <p>Домен Vercel: <strong id="domain">загрузка...</strong></p>
-            <p>HTTPS: <strong id="https">загрузка...</strong></p>
-            <p>GitHub репозиторий: <strong id="repo">загрузка...</strong></p>
-        </div>
-        
-        <div class="section">
-            <h3>🔑 Проверка подключения</h3>
-            <button id="supabase-btn">Проверить Supabase подключение</button>
-            <div id="supabase-status" class="hidden">
-                <p class="status-message"></p>
-            </div>
-        </div>
-        
-        <div class="section">
-            <h3>👤 Тест авторизации OK.ru</h3>
-            <button id="ok-btn">Войти через Одноклассники</button>
-            <div id="ok-status" class="hidden">
-                <p class="status-message"></p>
-            </div>
-        </div>
-        
-        <div id="app-content" class="hidden">
-            <div class="section">
-                <h3>💬 Тест отправки сообщения</h3>
-                <textarea id="messageInput" placeholder="Введите тестовое сообщение..." rows="4" style="width:100%; padding:15px; border-radius:8px; border:1px solid #ddd; margin:15px 0;"></textarea>
-                <button class="btn btn-supabase" onclick="sendTestMessage()">
-                    Отправить в Supabase
-                </button>
-                <div id="message-result"></div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <h3>⚙️  ключи (только для отладки)</h3>
-            <div class="code-block">
-// Supabase Configuration
-const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.com';
-const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
-
-// OK.ru Configuration
-const OK_APP_ID = '5158712';
-const OK_APP_KEY = '5FkHyaZz4fMv2tWESi0o';
-            </div>
-            <p style="color:#666; font-size:14px; margin-top:10px;">
-                ⚠️ В реальном приложении ключи должны быть скрыты в переменных окружения
-            </p>
-        </div>
-        
-        <footer>
-            <p>🚀 Развернуто на Vercel через GitHub</p>
-            <p>📅 Дата деплоя: <span id="deploy-date"></span></p>
-        </footer>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
+    `;
+    document.head.appendChild(style);
+} else {
+    console.log('ℹ️ Приложение открыто напрямую');
+}
+</script>
