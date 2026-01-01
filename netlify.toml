@@ -1,8 +1,9 @@
 [[headers]]
-  # Применяем правила ко всем файлам сайта
   for = "/*"
   [headers.values]
-    # 1. Разрешаем iframe ТОЛЬКО для OK.ru (старый стандарт)
+    # 1. Разрешаем iframe для OK.ru (устаревший стандарт, но для совместимости)
     X-Frame-Options = "ALLOW-FROM https://ok.ru"
-    # 2. Разрешаем iframe для OK.ru и всех его поддоменов (современный стандарт)
-    Content-Security-Policy = "frame-ancestors https://ok.ru https://*.ok.ru;"
+    
+    # 2. ГЛАВНОЕ: Современная политика безопасности, которая РАЗРЕШАЕТ iframe и разрешает необходимые скрипты.
+    #    'unsafe-inline' и 'unsafe-eval' временно нужны для работы FAPI и вашего кода.
+    Content-Security-Policy = "default-src 'self' https://*.ok.ru https://api.ok.ru; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.ok.ru https://api.ok.ru; frame-ancestors https://ok.ru https://*.ok.ru;"
