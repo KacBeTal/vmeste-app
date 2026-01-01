@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "public": true,
+  "github": {
+    "enabled": true,
+    "autoJobCancelation": true
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "ALLOW-FROM https://ok.ru"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors https://ok.ru"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
