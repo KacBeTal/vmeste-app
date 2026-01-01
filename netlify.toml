@@ -6,4 +6,4 @@
     
     # 2. ГЛАВНОЕ: Современная политика безопасности, которая РАЗРЕШАЕТ iframe и разрешает необходимые скрипты.
     #    'unsafe-inline' и 'unsafe-eval' временно нужны для работы FAPI и вашего кода.
-    Content-Security-Policy = "default-src 'self' https://*.ok.ru https://api.ok.ru; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.ok.ru https://api.ok.ru; frame-ancestors https://ok.ru https://*.ok.ru;"
+   Content-Security-Policy = "default-src 'self' https://*.ok.ru https://api.ok.ru; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.ok.ru https://api.ok.ru; frame-ancestors https://ok.ru https://*.ok.ru;"
