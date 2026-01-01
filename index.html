@@ -1,23 +1,19 @@
-<script>
-// Проверка, открыто ли приложение в iframe OK.ru
-if (window.self !== window.top) {
-    console.log('✅ Приложение открыто в iframe OK.ru');
-    document.body.classList.add('in-ok-iframe');
-    
-    // Можно добавить специфичные стили для iframe
-    const style = document.createElement('style');
-    style.textContent = `
-        .in-ok-iframe .container {
-            border-radius: 0;
-            padding: 20px;
-            max-width: 100%;
-        }
-        .in-ok-iframe body {
-            padding: 0;
-        }
-    `;
-    document.head.appendChild(style);
-} else {
-    console.log('ℹ️ Приложение открыто напрямую');
-}
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ВМесте Тест</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>🌊 ВМесте - Тестовый сайт</h1>
+    <p>Домен: <span id="domain"></span></p>
+    <p>Статус: <span class="success">✅ Работает!</span></p>
+    <script>
+        document.getElementById('domain').textContent = window.location.hostname;
+        console.log('Сайт работает на:', window.location.hostname);
+    </script>
+</body>
+</html>
