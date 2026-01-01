@@ -1,93 +1,89 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ВМесте | Одноклассники</title>
+    <title>ВМесте для OK.ru</title>
     
-    <!-- ОБЯЗАТЕЛЬНО: FAPI5 SDK для OK.ru -->
+    <!-- Разрешаем iframe -->
+    <meta http-equiv="Content-Security-Policy" 
+          content="frame-ancestors 'self' https://ok.ru https://*.ok.ru;">
+    
+    <!-- SDK OK.ru -->
     <script type="text/javascript" src="//api.ok.ru/js/fapi5.js" defer="defer"></script>
-    
-    <!-- Ваши стили -->
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- Supabase -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
         body {
             margin: 0;
-            padding: 15px;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background: white;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
             min-height: 100vh;
         }
-        
         .container {
-            max-width: 100%;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            max-width: 600px;
             margin: 0 auto;
         }
-        
         h1 {
-            color: #ed812b;
             text-align: center;
+            margin-bottom: 30px;
         }
-        
-        .ok-button {
-            background: #ed812b;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 0;
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            background: rgba(255,255,255,0.2);
         }
     </style>
-    <!-- Разрешаем iframe на всех доменах -->
-<meta http-equiv="Content-Security-Policy" 
-      content="frame-ancestors 'self' https://ok.ru https://*.ok.ru https://odnoklassniki.ru https://*.odnoklassniki.ru *;">
-      
-<!-- Разрешаем все скрипты -->
-<meta http-equiv="Content-Security-Policy" 
-      content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.ok.ru https://connect.ok.ru https://unpkg.com blob:;">
 </head>
 <body>
-    <div id="app" class="container">
+    <div class="container">
         <h1>🌊 ВМесте</h1>
-        <p>Приложение для знакомств через анонимные послания</p>
+        <p>Тестовое приложение для OK.ru</p>
         
-        <div id="loading">Загрузка OK API...</div>
-        
-        <div id="auth-section" style="display: none;">
-            <button onclick="loginWithOK()" class="ok-button">
-                Войти через Одноклассники
-            </button>
+        <div id="status" class="status">
+            <p>Проверка подключения...</p>
+            <p>Домен: <span id="domain"></span></p>
+            <p>В iframe: <span id="iframe-status"></span></p>
         </div>
         
-        <div id="content" style="display: none;">
-            <!-- Контент приложения появится здесь -->
-        </div>
-        
-        <div id="status"></div>
+        <div id="content"></div>
     </div>
 
-    <script src="app.js"></script>
     <script>
-// Принудительная проверка если мы в iframe
-if (window.self !== window.top) {
-    console.log('Мы в iframe! Перезагружаем для получения параметров OK.ru');
-    
-    // Если нет параметров в URL, пробуем получить их
-    if (!window.location.search.includes('apiconnection')) {
-        // Пробуем получить от родительского окна
-        try {
-            window.parent.postMessage({ type: 'get_ok_params' }, '*');
-        } catch (e) {
-            console.log('Не удалось связаться с родительским окном');
+        // Показываем информацию
+        document.getElementById('domain').textContent = window.location.hostname;
+        document.getElementById('iframe-status').textContent = 
+            (window.self !== window.top) ? '✅ Да' : '❌ Нет';
+        
+        // Проверяем OK.ru SDK
+        setTimeout(() => {
+            if (typeof FAPI !== 'undefined') {
+                document.getElementById('status').innerHTML += 
+                    '<p>✅ SDK OK.ru загружен</p>';
+                
+                // Пробуем получить параметры
+                var rParams = FAPI.Util.getRequestParameters();
+                if (rParams && rParams.api_server) {
+                    document.getElementById('content').innerHTML = 
+                        '<h3>✅ OK.ru iframe работает!</h3>' +
+                        '<p>API сервер: ' + rParams.api_server + '</p>' +
+                        '<button onclick="testOKAuth()">Тест авторизации</button>';
+                }
+            } else {
+                document.getElementById('status').innerHTML += 
+                    '<p style="color:#ff6b6b">❌ SDK OK.ru не загружен</p>';
+            }
+        }, 2000);
+        
+        function testOKAuth() {
+            alert('OK API тест работает!');
         }
-    }
-}
-</script>
+    </script>
 </body>
 </html>
