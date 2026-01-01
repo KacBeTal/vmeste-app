@@ -1,35 +1,124 @@
-/* Стили для iframe OK.ru */
-body.in-ok-iframe .container {
-    border-radius: 0;
-    padding: 15px;
-    margin: 0;
-    max-width: 100%;
-    box-shadow: none;
+/* Общие стили */
+.app-section {
+    margin: 25px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border-left: 4px solid #ed812b;
+}
+
+.app-section h3 {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+/* Поля ввода */
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #ed812b;
+}
+
+/* Карточки */
+.message-card {
     background: white;
-}
-
-body.in-ok-iframe .section {
-    margin: 15px 0;
     padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-body.in-ok-iframe .btn {
-    max-width: 100%;
+.friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
 }
 
-/* Адаптация для мобильных iframe */
+.friend-card {
+    text-align: center;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.friend-card img {
+    border-radius: 50%;
+    margin-bottom: 8px;
+}
+
+/* Статус сообщения */
+.status-success {
+    background: #d4edda;
+    color: #155724;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+    margin: 10px 0;
+}
+
+.status-error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+    margin: 10px 0;
+}
+
+.status-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #17a2b8;
+    margin: 10px 0;
+}
+
+/* Кнопки */
+.ok-button {
+    background: #ed812b;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.ok-button:hover {
+    background: #d9731f;
+}
+
+.ok-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Адаптивность */
 @media (max-width: 768px) {
-    body.in-ok-iframe h1 {
-        font-size: 28px;
-    }
-    
-    body.in-ok-iframe .btn {
-        padding: 12px 20px;
-        font-size: 16px;
-    }
-    
-    body.in-ok-iframe .code-block {
-        font-size: 12px;
+    .container {
         padding: 10px;
+    }
+    
+    .app-section {
+        padding: 15px;
+    }
+    
+    .friends-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
 }
