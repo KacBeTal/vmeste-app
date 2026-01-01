@@ -1,5 +1,5 @@
 // ========== КОНФИГУРАЦИЯ ==========
-const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.com';
+const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
 const OK_APP_ID = '5158712';
 const OK_APP_KEY = '5FkHyaZz4fMv2tWESi0o';
