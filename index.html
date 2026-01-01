@@ -44,6 +44,13 @@
             margin: 10px 0;
         }
     </style>
+    <!-- Разрешаем iframe на всех доменах -->
+<meta http-equiv="Content-Security-Policy" 
+      content="frame-ancestors 'self' https://ok.ru https://*.ok.ru https://odnoklassniki.ru https://*.odnoklassniki.ru *;">
+      
+<!-- Разрешаем все скрипты -->
+<meta http-equiv="Content-Security-Policy" 
+      content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.ok.ru https://connect.ok.ru https://unpkg.com blob:;">
 </head>
 <body>
     <div id="app" class="container">
