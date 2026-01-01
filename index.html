@@ -1,19 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>ВМесте Тест</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ВМесте | Одноклассники</title>
+    
+    <!-- ОБЯЗАТЕЛЬНО для OK.ru -->
+    <script src="https://connect.ok.ru/connect.js" type="text/javascript" charset="UTF-8"></script>
+    
+    <!-- Ваши стили -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
     <style>
-        body { font-family: Arial; padding: 20px; }
-        .success { color: green; }
+        /* Скрываем scrollbar в iframe OK.ru */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        /* OK.ru требует определенные стили для iframe */
+        .ok-frame {
+            width: 100%;
+            min-height: 100vh;
+            background: white;
+        }
     </style>
 </head>
-<body>
-    <h1>🌊 ВМесте - Тестовый сайт</h1>
-    <p>Домен: <span id="domain"></span></p>
-    <p>Статус: <span class="success">✅ Работает!</span></p>
+<body class="ok-frame">
+    <div id="app">
+        <div class="container">
+            <h1>🌊 ВМесте</h1>
+            <p>Приложение для знакомств через анонимные послания</p>
+            
+            <div id="auth-section">
+                <button id="ok-login-btn" class="ok-button">
+                    Войти через Одноклассники
+                </button>
+            </div>
+            
+            <div id="content" style="display: none;">
+                <!-- Контент приложения -->
+            </div>
+            
+            <div id="status"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    
+    <!-- Инициализация OK API -->
     <script>
-        document.getElementById('domain').textContent = window.location.hostname;
-        console.log('Сайт работает на:', window.location.hostname);
+        // Проверяем, что мы в iframe OK.ru
+        const isInOKFrame = window.location !== window.parent.location;
+        
+        if (isInOKFrame) {
+            console.log('🚀 Приложение запущено в OK.ru iframe');
+            
+            // Инициализируем OK API когда DOM загружен
+            document.addEventListener('DOMContentLoaded', function() {
+                try {
+                    // ОБЯЗАТЕЛЬНАЯ инициализация для OK.ru
+                    OK.init({
+                        appId: '512004353381',
+                        appKey: 'НУЖЕН_ПУБЛИЧНЫЙ_КЛЮЧ', // Замените на реальный
+                        callback: window.location.origin,
+                        scope: 'VALUABLE'
+                    });
+                    
+                    console.log('✅ OK API инициализирован');
+                    
+                    // Показываем кнопку входа
+                    document.getElementById('ok-login-btn').style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('❌ Ошибка инициализации OK API:', error);
+                    document.getElementById('status').innerHTML = 
+                        '<p style="color:red">Ошибка инициализации OK API. Проверьте Console.</p>';
+                }
+            });
+        }
     </script>
 </body>
 </html>
