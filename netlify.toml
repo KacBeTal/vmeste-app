@@ -1,9 +1,21 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    # 1. Разрешаем iframe для OK.ru (устаревший стандарт, но для совместимости)
+    # РАЗРЕШАЕМ iframe ТОЛЬКО для OK.ru
     X-Frame-Options = "ALLOW-FROM https://ok.ru"
     
-    # 2. ГЛАВНОЕ: Современная политика безопасности, которая РАЗРЕШАЕТ iframe и разрешает необходимые скрипты.
-    #    'unsafe-inline' и 'unsafe-eval' временно нужны для работы FAPI и вашего кода.
-   Content-Security-Policy = "default-src 'self' https://*.ok.ru https://api.ok.ru; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.ok.ru https://api.ok.ru; frame-ancestors https://ok.ru https://*.ok.ru;"
+    # CSP для OK.ru - МЕНЬШЕ ОГРАНИЧЕНИЙ на время разработки
+    Content-Security-Policy = "
+      default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;
+      script-src * 'unsafe-inline' 'unsafe-eval' blob:;
+      connect-src *;
+      style-src * 'unsafe-inline';
+      img-src * data: blob:;
+      frame-src *;
+      frame-ancestors https://ok.ru https://*.ok.ru;
+    "
+    
+    # Дополнительные заголовки для CORS
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "*"
