@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ВМесте 🌊 | Анонимный океан посланий</title>
-    
-    <!-- VK Bridge для OK.ru -->
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <title>ВМесте 🌊 | Океан посланий из OK.ru</title>
     
     <!-- Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -340,25 +337,17 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
-        /* Debug Panel */
-        .debug-panel {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.85);
+        /* OK Status Badge */
+        .ok-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--ok-orange);
             color: white;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 5px 10px;
+            border-radius: 20px;
             font-size: 12px;
-            z-index: 9999;
-            max-width: 300px;
-            border: 1px solid #ff6b8b;
-        }
-        
-        .debug-title {
-            color: #ff6b8b;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-weight: 600;
         }
         
         /* Waves Animation */
@@ -386,7 +375,7 @@
     <div id="loading" class="loading">
         <div class="loader"></div>
         <p>Загрузка ВМесте...</p>
-        <p id="loading-status">Инициализация приложения</p>
+        <p id="loading-status">Подключение к OK.ru...</p>
     </div>
     
     <div class="app-container" id="app-container">
@@ -398,7 +387,7 @@
             </div>
             <div class="status" id="connection-status">
                 <div class="status-dot"></div>
-                <span>Подключение...</span>
+                <span>OK.ru</span>
             </div>
         </header>
         
@@ -411,7 +400,7 @@
                     <div class="profile-info">
                         <h3 id="user-name">Загрузка...</h3>
                         <div class="location" id="user-location">
-                            📍 Местоположение...
+                            📍 OK.ru
                         </div>
                         <div class="status">
                             <div class="status-dot"></div>
@@ -435,7 +424,7 @@
                     </div>
                     <div class="stat-item">
                         <div class="stat-value" id="days-count">1</div>
-                        <div class="stat-label">Дней с нами</div>
+                        <div class="stat-label">Дней в OK</div>
                     </div>
                 </div>
                 
@@ -452,8 +441,15 @@
             <!-- Center: Ocean -->
             <section class="ocean-section">
                 <h2 class="ocean-title">
-                    <span>🌊 Океан посланий</span>
+                    <span>🌊 Океан посланий из OK.ru</span>
                 </h2>
+                
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <div class="ok-badge">
+                        <span>👥 Пользователей OK.ru онлайн: </span>
+                        <span id="online-count">0</span>
+                    </div>
+                </div>
                 
                 <div class="action-buttons">
                     <button class="btn btn-primary" onclick="showSendMessage()">
@@ -467,10 +463,10 @@
                 <div id="message-display" style="margin-top: 30px;">
                     <div class="message-bubble">
                         <div class="message-content">
-                            "Добро пожаловать в ВМесте! Бросьте своё первое послание в океан или поймайте чужое."
+                            "Добро пожаловать из OK.ru! Бросьте своё первое послание в океан или поймайте чужое."
                         </div>
                         <div class="message-meta">
-                            <span>💬 Система</span>
+                            <span>💬 OK.ru</span>
                             <span>Только что</span>
                         </div>
                     </div>
@@ -481,7 +477,7 @@
             <aside class="info-panel">
                 <h3 class="info-title">📊 О приложении</h3>
                 <p style="margin-bottom: 15px;">
-                    <strong>"ВМесте"</strong> — это пространство для искреннего общения.
+                    <strong>"ВМесте"</strong> — эксклюзивно для пользователей OK.ru.
                 </p>
                 
                 <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin: 15px 0;">
@@ -491,18 +487,18 @@
                 </div>
                 
                 <p style="margin-bottom: 10px;">
+                    • <strong>Только OK.ru:</strong> Настоящие пользователи Одноклассников
+                </p>
+                <p style="margin-bottom: 10px;">
                     • <strong>Анонимность:</strong> Ваши послания не привязаны к профилю
                 </p>
                 <p style="margin-bottom: 10px;">
-                    • <strong>Случайность:</strong> Ловите послания со всего океана
-                </p>
-                <p style="margin-bottom: 10px;">
-                    • <strong>Искренность:</strong> Только настоящие мысли и чувства
+                    • <strong>Случайность:</strong> Ловите послания от других пользователей OK
                 </p>
                 
                 <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
                     <p style="font-size: 12px; opacity: 0.7;">
-                        🔗 Интеграция с OK.ru через VK Mini Apps<br>
+                        🔗 Интеграция с OK.ru<br>
                         💾 База данных Supabase<br>
                         🌐 Онлайн в реальном времени
                     </p>
@@ -515,7 +511,7 @@
     <div id="sendMessageModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
         <div style="background: var(--dark); padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; border: 2px solid var(--primary);">
             <h3 style="margin-bottom: 20px; color: var(--secondary);">✍️ Бросить послание в океан</h3>
-            <textarea id="messageInput" placeholder="Что вы хотите сказать миру?" style="width: 100%; height: 150px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 16px; resize: vertical;"></textarea>
+            <textarea id="messageInput" placeholder="Что вы хотите сказать другим пользователям OK.ru?" style="width: 100%; height: 150px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 16px; resize: vertical;"></textarea>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button onclick="sendMessage()" class="btn btn-primary" style="flex: 1;">
                     🌊 Отправить
@@ -536,13 +532,12 @@
         let supabaseClient = null;
         let currentUser = {
             ok_id: null,
-            vk_id: null,
+            vk_user_id: null,
             first_name: '',
             last_name: '',
+            full_name: '',
             avatar_url: '',
             location: '',
-            city: '',
-            supabase_id: null,
             is_ok_user: false
         };
         
@@ -565,7 +560,8 @@
             notification.className = 'notification';
             notification.style.background = type === 'success' ? '#50E3C2' : 
                                            type === 'error' ? '#FF6B8B' : 
-                                           type === 'warning' ? '#FFA500' : '#4A90E2';
+                                           type === 'warning' ? '#FFA500' : 
+                                           type === 'ok' ? '#EE8C3A' : '#4A90E2';
             notification.textContent = message;
             document.body.appendChild(notification);
             
@@ -575,12 +571,17 @@
             }, 3000);
         }
         
-        function getAvatarFallback(firstName, lastName) {
-            return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName + ' ' + lastName)}&background=4A90E2&color=fff&size=70`;
+        function getOKAvatarUrl(userId, firstName = '', lastName = '') {
+            if (!userId) {
+                return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName + ' ' + lastName)}&background=EE8C3A&color=fff&size=200`;
+            }
+            
+            // Генерируем аватарку на основе ID
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName + ' ' + lastName)}&background=EE8C3A&color=fff&size=200`;
         }
         
-        // ========== ОТЛАДОЧНЫЙ ВЫВОД ==========
-        function showDebugInfo() {
+        // ========== ОТЛАДКА ПАРАМЕТРОВ OK.RU ==========
+        function debugOKParameters() {
             const urlParams = new URLSearchParams(window.location.search);
             const params = {};
             
@@ -588,282 +589,139 @@
                 params[key] = value;
             }
             
-            // Проверяем OK.ru признаки
-            const isOK = params['vk_client'] === 'ok' || 
-                        params['vk_ok_user_id'] || 
-                        params['vk_ref'] === 'app_mini_app';
-            
-            const isAppUser = params['vk_is_app_user'] === '1';
-            const hasSign = params['sign'];
-            
-            // Создаем панель отладки
-            const debugDiv = document.createElement('div');
-            debugDiv.className = 'debug-panel';
-            debugDiv.innerHTML = `
-                <div class="debug-title">Отладка OK.ru</div>
-                <div>В OK.ru: <strong>${isOK ? 'ДА ✓' : 'НЕТ ✗'}</strong></div>
-                <div>Авторизован: <strong>${isAppUser ? 'ДА ✓' : 'НЕТ ✗'}</strong></div>
-                <div>Подпись: <strong>${hasSign ? 'ЕСТЬ ✓' : 'НЕТ ✗'}</strong></div>
-                <div>ID: <strong>${params['vk_user_id'] || params['vk_ok_user_id'] || 'нет'}</strong></div>
-                <div>Viewer ID: <strong>${params['viewer_id'] || 'нет'}</strong></div>
-                <div style="margin-top: 5px; font-size: 10px; opacity: 0.7;">
-                    Параметров: ${Object.keys(params).length}
-                </div>
-            `;
-            
-            document.body.appendChild(debugDiv);
-            
-            // Удалить через 15 секунд
-            setTimeout(() => {
-                if (debugDiv.parentNode) {
-                    debugDiv.style.opacity = '0';
-                    debugDiv.style.transition = 'opacity 0.5s';
-                    setTimeout(() => {
-                        if (debugDiv.parentNode) debugDiv.remove();
-                    }, 500);
-                }
-            }, 15000);
-            
-            // Выводим в консоль для подробной отладки
-            console.log('🔍 ДЕТАЛЬНЫЕ ПАРАМЕТРЫ URL:');
+            console.log('🔍 ПАРАМЕТРЫ ОТ OK.RU:');
             console.table(params);
             
-            return {
-                isOK,
-                isAppUser,
-                hasSign,
-                params
-            };
+            return params;
         }
         
         // ========== ПОЛУЧЕНИЕ ДАННЫХ ИЗ OK.RU ==========
-        function parseUserDataFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const params = {};
+        function getOKUserData() {
+            const params = debugOKParameters();
             
-            for (const [key, value] of urlParams.entries()) {
-                params[key] = value;
+            // Проверяем, что это OK.ru
+            const isOK = params['vk_client'] === 'ok';
+            const isAppUser = params['vk_is_app_user'] === 'true';
+            
+            if (!isOK) {
+                console.log('⚠️ Это не OK.ru');
+                return null;
             }
             
-            console.log('🎯 Анализ параметров OK.ru:');
-            
-            // Определяем, запущено ли через OK.ru
-            const isOK = params['vk_client'] === 'ok' || 
-                        params['vk_ok_user_id'] || 
-                        params['vk_ref'] === 'app_mini_app';
-            
-            const isAppUser = params['vk_is_app_user'] === '1';
-            
-            // Основные ID пользователя
-            let okId = params['vk_ok_user_id'] || 
-                      params['vk_user_id'] || 
-                      params['viewer_id'] || 
-                      params['uid'];
-            
-            // Если это OK.ru, но нет стандартного ID, используем viewer_id
-            if (isOK && !okId && params['viewer_id']) {
-                okId = 'ok_' + params['viewer_id'];
+            if (!isAppUser) {
+                console.log('⚠️ Пользователь не авторизован в приложении');
+                return null;
             }
             
-            // Получаем имя пользователя
+            // Получаем ID пользователя
+            const okUserId = params['vk_ok_user_id'];
+            const vkUserId = params['vk_user_id'];
+            
+            if (!okUserId && !vkUserId) {
+                console.log('⚠️ Нет ID пользователя');
+                return null;
+            }
+            
+            // Основной ID - используем ok_user_id
+            const userId = okUserId || vkUserId;
+            
+            console.log('✅ Пользователь OK.ru найден:', {
+                okUserId: okUserId,
+                vkUserId: vkUserId,
+                viewerId: params['viewer_id']
+            });
+            
+            // Пробуем получить имя из разных параметров
             let firstName = '';
             let lastName = '';
             
-            // Пробуем разные варианты получения имени
-            if (params['first_name'] && params['last_name']) {
-                // Если есть отдельные параметры имени и фамилии
-                firstName = decodeURIComponent(params['first_name']);
-                lastName = decodeURIComponent(params['last_name']);
-            } else if (params['user_name']) {
-                // Если есть полное имя
-                const fullName = decodeURIComponent(params['user_name']).trim();
-                const nameParts = fullName.split(' ');
-                firstName = nameParts[0] || '';
-                if (nameParts.length > 1) {
-                    lastName = nameParts.slice(1).join(' ');
-                }
-            } else if (params['full_name']) {
-                // Альтернативный параметр полного имени
-                const fullName = decodeURIComponent(params['full_name']).trim();
-                const nameParts = fullName.split(' ');
-                firstName = nameParts[0] || '';
-                if (nameParts.length > 1) {
-                    lastName = nameParts.slice(1).join(' ');
-                }
+            // OK.ru обычно не передает имя в параметрах для мини-приложений
+            // Но мы можем использовать ID для создания профиля
+            
+            // Создаем имя на основе ID
+            if (params['viewer_id']) {
+                firstName = `Пользователь`;
+                lastName = `OK${params['viewer_id'].substr(0, 4)}`;
+            } else if (userId) {
+                firstName = `OK`;
+                lastName = `Пользователь`;
             }
             
-            // Получаем аватарку
-            let avatarUrl = '';
-            const avatarParams = ['photo_200', 'photo_100', 'photo_50', 'user_image', 'photo'];
+            // Создаем аватарку на основе ID
+            const avatarUrl = getOKAvatarUrl(userId, firstName, lastName);
             
-            for (const param of avatarParams) {
-                if (params[param]) {
-                    avatarUrl = decodeURIComponent(params[param]);
-                    
-                    // Исправляем URL аватарки OK.ru
-                    if (avatarUrl.includes('i.okcdn.ru')) {
-                        avatarUrl = avatarUrl.replace(/(?:&|\?)size=\w+/, '') + '&size=200';
-                    }
-                    break;
-                }
-            }
-            
-            // Если нет аватарки, но есть ID, генерируем URL аватарки OK
-            if (!avatarUrl && okId && isOK) {
-                avatarUrl = `https://i.okcdn.ru/?cmd=PhotoFriend&pid=${okId}&fid=${okId}&size=200`;
-            }
-            
-            // Получаем местоположение
-            let location = '';
-            let city = '';
-            
-            const locationParams = ['city', 'location', 'ip_geo_location', 'geo_location'];
-            for (const param of locationParams) {
-                if (params[param]) {
-                    const locStr = decodeURIComponent(params[param]);
-                    
-                    // Формат часто "RU,Москва,Москва"
-                    if (locStr.includes(',')) {
-                        const parts = locStr.split(',');
-                        location = parts[1] || parts[0] || '';
-                        city = parts[1] || parts[0] || '';
-                    } else {
-                        location = locStr;
-                        city = locStr;
-                    }
-                    break;
-                }
-            }
-            
-            // Если имя не найдено, но пользователь в OK.ru
-            if (!firstName && isOK && isAppUser) {
-                firstName = 'Пользователь';
-                lastName = 'OK';
-            }
-            
-            const result = {
-                ok_id: okId,
-                vk_id: okId, // Для совместимости
-                first_name: firstName || 'Гость',
-                last_name: lastName || '',
+            return {
+                ok_id: userId, // Основной ID
+                vk_user_id: vkUserId, // VK ID для совместимости
+                ok_user_id: okUserId, // OK ID
+                first_name: firstName,
+                last_name: lastName,
+                full_name: `${firstName} ${lastName}`,
                 avatar_url: avatarUrl,
-                location: location,
-                city: city,
-                is_ok_user: isOK,
-                is_app_user: isAppUser,
-                has_real_data: !!(okId && isOK && isAppUser)
+                location: 'OK.ru',
+                is_ok_user: true,
+                is_app_user: true,
+                viewer_id: params['viewer_id']
             };
-            
-            console.log('📊 Результат парсинга:');
-            console.log('- ID:', result.ok_id);
-            console.log('- Имя:', result.first_name, result.last_name);
-            console.log('- OK.ru пользователь:', result.is_ok_user);
-            console.log('- Авторизован:', result.is_app_user);
-            console.log('- Реальные данные:', result.has_real_data);
-            
-            return result;
         }
         
-        // ========== ИНИЦИАЛИЗАЦИЯ VK BRIDGE ==========
-        async function initVKBridge() {
-            try {
-                // Проверяем доступность VK Bridge
-                if (typeof vkBridge === 'undefined') {
-                    console.warn('VK Bridge не загружен');
-                    return null;
-                }
-                
-                // Инициализируем
-                await vkBridge.send('VKWebAppInit');
-                console.log('✅ VK Bridge инициализирован');
-                
-                // Пробуем получить данные пользователя
-                try {
-                    const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
-                    console.log('✅ Данные из VK Bridge:', userInfo);
-                    
-                    return {
-                        first_name: userInfo.first_name || '',
-                        last_name: userInfo.last_name || '',
-                        photo_200: userInfo.photo_200 || userInfo.photo_100 || userInfo.photo_50 || '',
-                        id: userInfo.id || ''
-                    };
-                } catch (error) {
-                    console.log('Не удалось получить UserInfo:', error);
-                    return null;
-                }
-                
-            } catch (error) {
-                console.error('Ошибка VK Bridge:', error);
-                return null;
-            }
-        }
-        
-        // ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ==========
-        function updateUserInterface(userData) {
-            // Обновляем имя
-            const fullName = `${userData.first_name} ${userData.last_name}`.trim();
-            document.getElementById('user-name').textContent = fullName || 'Гость';
+        // ========== СОЗДАНИЕ ПРОФИЛЯ OK.RU ==========
+        function createOKProfile(userData) {
+            // Обновляем интерфейс
+            document.getElementById('user-name').textContent = userData.full_name;
             
-            // Обновляем аватар
+            // Аватар
             const avatarImg = document.getElementById('user-avatar');
-            if (userData.avatar_url) {
-                avatarImg.src = userData.avatar_url;
-                avatarImg.onerror = function() {
-                    this.src = getAvatarFallback(userData.first_name, userData.last_name);
-                };
-            } else {
-                avatarImg.src = getAvatarFallback(userData.first_name, userData.last_name);
-            }
+            avatarImg.src = userData.avatar_url;
+            avatarImg.alt = userData.full_name;
             
-            // Обновляем местоположение
-            if (userData.location || userData.city) {
-                const location = userData.location || userData.city;
-                document.getElementById('user-location').innerHTML = `📍 ${location}`;
-            } else {
-                document.getElementById('user-location').innerHTML = '📍 Не указано';
-            }
+            // Статус
+            document.getElementById('user-location').innerHTML = `📍 OK.ru`;
+            document.getElementById('connection-status').innerHTML = `
+                <div class="status-dot" style="background: #EE8C3A"></div>
+                <span>Подключено к OK.ru</span>
+            `;
             
-            // Сохраняем данные в глобальную переменную
-            currentUser = {
-                ...currentUser,
-                ...userData,
-                full_name: fullName
-            };
+            // Сохраняем в глобальную переменную
+            currentUser = userData;
             
-            console.log('👤 Пользователь обновлен:', currentUser);
+            console.log('👤 Профиль OK.ru создан:', currentUser);
+            return userData;
         }
         
         // ========== СОХРАНЕНИЕ В БАЗУ ДАННЫХ ==========
-        async function saveUserToDatabase(userData) {
+        async function saveUserToDatabase() {
             if (!supabaseClient) {
                 console.warn('Supabase не инициализирован');
                 return null;
             }
             
-            // Если это демо-пользователь, не сохраняем
-            if (!userData.ok_id || !userData.has_real_data) {
-                console.log('⚠️ Демо-пользователь, не сохраняем в БД');
+            if (!currentUser.ok_id) {
+                console.warn('Нет ID пользователя для сохранения');
                 return null;
             }
             
             try {
                 const profileData = {
-                    ok_id: userData.ok_id,
-                    vk_id: userData.vk_id,
-                    first_name: userData.first_name,
-                    last_name: userData.last_name,
-                    full_name: `${userData.first_name} ${userData.last_name}`.trim(),
-                    avatar_url: userData.avatar_url,
-                    location: userData.location || userData.city,
+                    ok_id: currentUser.ok_id,
+                    vk_user_id: currentUser.vk_user_id,
+                    ok_user_id: currentUser.ok_user_id,
+                    first_name: currentUser.first_name,
+                    last_name: currentUser.last_name,
+                    full_name: currentUser.full_name,
+                    avatar_url: currentUser.avatar_url,
+                    location: currentUser.location,
                     is_online: true,
-                    last_seen: new Date().toISOString()
+                    is_ok_user: true,
+                    last_seen: new Date().toISOString(),
+                    created_at: new Date().toISOString()
                 };
                 
-                console.log('💾 Сохраняем профиль:', profileData);
+                console.log('💾 Сохраняем профиль в БД:', profileData);
                 
+                // Пробуем вставить или обновить
                 const { data, error } = await supabaseClient
-                    .from('profiles')
+                    .from('ok_profiles')
                     .upsert(profileData, {
                         onConflict: 'ok_id'
                     })
@@ -873,31 +731,26 @@
                 if (error) {
                     console.error('❌ Ошибка сохранения профиля:', error);
                     
-                    // Пробуем просто вставить (без upsert)
-                    const { data: newData, error: insertError } = await supabaseClient
-                        .from('profiles')
+                    // Пробуем создать таблицу динамически
+                    await createOKProfilesTable();
+                    
+                    // Пробуем еще раз
+                    const { data: newData, error: newError } = await supabaseClient
+                        .from('ok_profiles')
                         .insert(profileData)
                         .select()
                         .single();
                         
-                    if (insertError) {
-                        console.error('❌ Ошибка при вставке:', insertError);
-                        
-                        // Показываем пользователю ошибку структуры БД
-                        if (insertError.message.includes('column') && insertError.message.includes('does not exist')) {
-                            showNotification('Ошибка структуры базы данных. Проверьте таблицу profiles.', 'error');
-                        }
-                        
+                    if (newError) {
+                        console.error('❌ Ошибка при создании профиля:', newError);
                         return null;
                     }
                     
-                    console.log('✅ Профиль создан (вставка):', newData);
-                    currentUser.supabase_id = newData.id;
+                    console.log('✅ Профиль создан:', newData);
                     return newData;
                 }
                 
-                console.log('✅ Профиль сохранен (обновлен):', data);
-                currentUser.supabase_id = data.id;
+                console.log('✅ Профиль сохранен:', data);
                 return data;
                 
             } catch (error) {
@@ -906,51 +759,161 @@
             }
         }
         
-        // ========== ДЕМО-РЕЖИМ ==========
-        async function startDemoMode() {
-            console.log('🚀 Запуск демо-режима');
+        // ========== СОЗДАНИЕ ТАБЛИЦЫ В БАЗЕ ДАННЫХ ==========
+        async function createOKProfilesTable() {
+            if (!supabaseClient) return;
             
-            const demoNames = [
-                {first: 'Алексей', last: 'Иванов', city: 'Москва'},
-                {first: 'Мария', last: 'Петрова', city: 'Санкт-Петербург'},
-                {first: 'Дмитрий', last: 'Сидоров', city: 'Новосибирск'},
-                {first: 'Екатерина', last: 'Кузнецова', city: 'Екатеринбург'},
-                {first: 'Анна', last: 'Смирнова', city: 'Казань'}
-            ];
+            console.log('🛠️ Создаем таблицу ok_profiles...');
             
-            const randomDemo = demoNames[Math.floor(Math.random() * demoNames.length)];
+            try {
+                // SQL для создания таблицы ok_profiles
+                const sql = `
+                    CREATE TABLE IF NOT EXISTS ok_profiles (
+                        id BIGSERIAL PRIMARY KEY,
+                        ok_id TEXT UNIQUE NOT NULL,
+                        vk_user_id TEXT,
+                        ok_user_id TEXT,
+                        first_name TEXT,
+                        last_name TEXT,
+                        full_name TEXT,
+                        avatar_url TEXT,
+                        location TEXT,
+                        is_online BOOLEAN DEFAULT true,
+                        is_ok_user BOOLEAN DEFAULT true,
+                        last_seen TIMESTAMP DEFAULT NOW(),
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    );
+                    
+                    CREATE INDEX IF NOT EXISTS idx_ok_profiles_ok_id ON ok_profiles(ok_id);
+                    CREATE INDEX IF NOT EXISTS idx_ok_profiles_online ON ok_profiles(is_online, last_seen);
+                `;
+                
+                // Пробуем выполнить SQL
+                const { error } = await supabaseClient.rpc('exec_sql', { sql });
+                
+                if (error) {
+                    console.log('Не удалось создать таблицу через RPC:', error);
+                    
+                    // Альтернативный способ - используем другую таблицу
+                    console.log('Используем таблицу profiles...');
+                }
+                
+            } catch (error) {
+                console.log('Ошибка создания таблицы:', error);
+            }
+        }
+        
+        async function createMessagesTable() {
+            if (!supabaseClient) return;
             
-            const demoUser = {
-                ok_id: 'demo_' + Math.random().toString(36).substr(2, 9),
-                vk_id: 'demo_vk_' + Math.random().toString(36).substr(2, 9),
-                first_name: randomDemo.first,
-                last_name: randomDemo.last,
-                avatar_url: '',
-                location: randomDemo.city,
-                city: randomDemo.city,
-                is_ok_user: false,
-                is_app_user: false,
-                has_real_data: false
-            };
+            console.log('🛠️ Создаем таблицу ok_messages...');
             
-            updateUserInterface(demoUser);
-            return demoUser;
+            try {
+                // SQL для создания таблицы сообщений
+                const sql = `
+                    CREATE TABLE IF NOT EXISTS ok_messages (
+                        id BIGSERIAL PRIMARY KEY,
+                        content TEXT NOT NULL,
+                        sender_ok_id TEXT NOT NULL,
+                        sender_name TEXT,
+                        is_anonymous BOOLEAN DEFAULT true,
+                        likes INTEGER DEFAULT 0,
+                        caught_by TEXT,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    );
+                    
+                    CREATE INDEX IF NOT EXISTS idx_ok_messages_sender ON ok_messages(sender_ok_id);
+                    CREATE INDEX IF NOT EXISTS idx_ok_messages_created ON ok_messages(created_at DESC);
+                    CREATE INDEX IF NOT EXISTS idx_ok_messages_caught ON ok_messages(caught_by);
+                `;
+                
+                const { error } = await supabaseClient.rpc('exec_sql', { sql });
+                
+                if (error) {
+                    console.log('Не удалось создать таблицу сообщений:', error);
+                }
+                
+            } catch (error) {
+                console.log('Ошибка создания таблицы сообщений:', error);
+            }
+        }
+        
+        // ========== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ==========
+        async function initApp() {
+            updateLoadingStatus('Подключение к OK.ru...');
+            
+            try {
+                // 1. Инициализируем Supabase
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('✅ Supabase подключен');
+                
+                // 2. Получаем данные пользователя из OK.ru
+                updateLoadingStatus('Получение данных пользователя...');
+                const okUserData = getOKUserData();
+                
+                if (!okUserData) {
+                    throw new Error('Не удалось получить данные из OK.ru');
+                }
+                
+                // 3. Создаем профиль
+                createOKProfile(okUserData);
+                
+                // 4. Создаем таблицы в базе данных
+                updateLoadingStatus('Настройка базы данных...');
+                await Promise.all([
+                    createOKProfilesTable(),
+                    createMessagesTable()
+                ]);
+                
+                // 5. Сохраняем пользователя в базу
+                updateLoadingStatus('Сохранение профиля...');
+                const savedProfile = await saveUserToDatabase();
+                
+                if (savedProfile) {
+                    console.log('✅ Профиль сохранен в БД');
+                    showNotification(`Добро пожаловать в OK.ru, ${currentUser.first_name}!`, 'ok');
+                }
+                
+                // 6. Загружаем статистику
+                updateLoadingStatus('Загрузка данных...');
+                await Promise.all([
+                    loadUserStats(),
+                    loadOceanMessages(),
+                    loadOnlineCount()
+                ]);
+                
+                // 7. Показываем приложение
+                showApp();
+                updateLoadingStatus('Готово!');
+                
+            } catch (error) {
+                console.error('❌ Ошибка инициализации:', error);
+                updateLoadingStatus('Ошибка: ' + error.message);
+                
+                // Показываем приложение с сообщением об ошибке
+                setTimeout(() => {
+                    showApp();
+                    showNotification('Ошибка подключения к OK.ru', 'error');
+                }, 1500);
+            }
         }
         
         // ========== ЗАГРУЗКА СТАТИСТИКИ ==========
         async function loadUserStats() {
-            // Если демо-режим или нет пользователя
-            if (!currentUser.ok_id || !currentUser.has_real_data || !supabaseClient) {
-                document.getElementById('sent-count').textContent = '5';
-                document.getElementById('caught-count').textContent = '3';
-                document.getElementById('likes-count').textContent = '12';
+            if (!currentUser.ok_id || !supabaseClient) {
+                // Демо-статистика
+                document.getElementById('sent-count').textContent = '0';
+                document.getElementById('caught-count').textContent = '0';
+                document.getElementById('likes-count').textContent = '0';
                 document.getElementById('days-count').textContent = '1';
                 return;
             }
             
             try {
+                // Используем таблицу ok_messages
                 const { data: messages, error } = await supabaseClient
-                    .from('ocean_messages')
+                    .from('ok_messages')
                     .select('*')
                     .eq('sender_ok_id', currentUser.ok_id);
                     
@@ -973,145 +936,24 @@
             }
         }
         
-        // ========== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ==========
-        async function initApp() {
-            updateLoadingStatus('Инициализация приложения...');
+        async function loadOnlineCount() {
+            if (!supabaseClient) return;
             
             try {
-                // 1. Показываем отладочную информацию
-                const debugInfo = showDebugInfo();
-                
-                // 2. Инициализируем Supabase
-                if (typeof supabase === 'undefined') {
-                    throw new Error('Supabase SDK не загружен');
+                const { count, error } = await supabaseClient
+                    .from('ok_profiles')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('is_online', true);
+                    
+                if (error) {
+                    console.error('Ошибка загрузки онлайн-статистики:', error);
+                    return;
                 }
                 
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log('✅ Supabase подключен');
-                
-                // 3. Парсим данные из URL
-                updateLoadingStatus('Получение данных пользователя...');
-                let userData = parseUserDataFromURL();
-                
-                // 4. Пробуем получить данные через VK Bridge
-                let bridgeData = null;
-                if (userData.is_ok_user && userData.is_app_user) {
-                    try {
-                        bridgeData = await initVKBridge();
-                        if (bridgeData) {
-                            console.log('✅ Получены данные из VK Bridge');
-                            
-                            // Обновляем данные пользователя из Bridge
-                            userData.first_name = bridgeData.first_name || userData.first_name;
-                            userData.last_name = bridgeData.last_name || userData.last_name;
-                            userData.avatar_url = bridgeData.photo_200 || userData.avatar_url;
-                            
-                            if (bridgeData.id && !userData.ok_id) {
-                                userData.ok_id = bridgeData.id;
-                                userData.vk_id = bridgeData.id;
-                            }
-                            
-                            userData.has_real_data = true;
-                        }
-                    } catch (error) {
-                        console.log('VK Bridge недоступен:', error);
-                    }
-                }
-                
-                // 5. Проверяем, достаточно ли данных
-                const hasEnoughData = userData.ok_id && 
-                                     userData.is_ok_user && 
-                                     userData.is_app_user && 
-                                     userData.first_name && 
-                                     userData.first_name !== 'Гость';
-                
-                console.log('📊 Проверка данных:', {
-                    hasId: !!userData.ok_id,
-                    isOK: userData.is_ok_user,
-                    isAppUser: userData.is_app_user,
-                    hasFirstName: !!userData.first_name,
-                    firstName: userData.first_name,
-                    enoughData: hasEnoughData
-                });
-                
-                // 6. Обработка разных сценариев
-                if (hasEnoughData) {
-                    console.log('✅ Достаточно данных для реального режима');
-                    userData.has_real_data = true;
-                    
-                    // Обновляем интерфейс
-                    updateUserInterface(userData);
-                    
-                    // Сохраняем в базу
-                    updateLoadingStatus('Сохранение профиля...');
-                    await saveUserToDatabase(userData);
-                    
-                    showNotification(`Привет, ${userData.first_name}!`, 'success');
-                    
-                } else if (userData.is_ok_user && userData.is_app_user) {
-                    // Пользователь в OK.ru, но данных мало
-                    console.log('⚠️ Пользователь в OK.ru, но данных мало');
-                    
-                    // Создаем минимальные данные
-                    if (!userData.first_name || userData.first_name === 'Гость') {
-                        userData.first_name = 'Пользователь';
-                        userData.last_name = 'OK';
-                    }
-                    
-                    if (!userData.ok_id && debugInfo.params['viewer_id']) {
-                        userData.ok_id = 'ok_' + debugInfo.params['viewer_id'];
-                        userData.vk_id = userData.ok_id;
-                    }
-                    
-                    userData.has_real_data = true;
-                    updateUserInterface(userData);
-                    
-                    // Пытаемся сохранить
-                    await saveUserToDatabase(userData);
-                    showNotification('Добро пожаловать в ВМесте!', 'success');
-                    
-                } else {
-                    // Демо-режим
-                    console.log('⚠️ Запуск в демо-режиме');
-                    userData = await startDemoMode();
-                    showNotification('Запущен в демо-режиме', 'warning');
-                }
-                
-                // 7. Обновляем статус подключения
-                if (userData.has_real_data && userData.is_ok_user) {
-                    document.getElementById('connection-status').innerHTML = `
-                        <div class="status-dot" style="background: #50E3C2"></div>
-                        <span>Подключено к OK.ru</span>
-                    `;
-                } else {
-                    document.getElementById('connection-status').innerHTML = `
-                        <div class="status-dot" style="background: #FFA500"></div>
-                        <span>Демо-режим</span>
-                    `;
-                }
-                
-                // 8. Загружаем данные
-                updateLoadingStatus('Загрузка данных...');
-                await Promise.all([
-                    loadUserStats(),
-                    loadOceanMessages()
-                ]);
-                
-                // 9. Показываем приложение
-                showApp();
-                updateLoadingStatus('Готово!');
+                document.getElementById('online-count').textContent = count || 0;
                 
             } catch (error) {
-                console.error('❌ Критическая ошибка инициализации:', error);
-                updateLoadingStatus('Ошибка: ' + error.message);
-                
-                // Запускаем демо-режим в случае ошибки
-                setTimeout(async () => {
-                    await startDemoMode();
-                    await loadUserStats();
-                    showApp();
-                    showNotification('Запущен в демо-режиме', 'warning');
-                }, 1500);
+                console.error('Ошибка:', error);
             }
         }
         
@@ -1121,7 +963,7 @@
             
             try {
                 const { data: messages, error } = await supabaseClient
-                    .from('ocean_messages')
+                    .from('ok_messages')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(3);
@@ -1168,25 +1010,41 @@
                 return;
             }
             
+            if (!currentUser.ok_id) {
+                showNotification('Пользователь не найден', 'error');
+                return;
+            }
+            
             try {
                 const messageData = {
                     content: text,
                     sender_ok_id: currentUser.ok_id,
                     sender_name: currentUser.full_name,
-                    sender_avatar: currentUser.avatar_url,
                     is_anonymous: true,
                     created_at: new Date().toISOString()
                 };
                 
-                console.log('📨 Отправка сообщения:', messageData);
+                console.log('📨 Отправка сообщения от OK.ru:', messageData);
                 
-                const { data, error } = await supabaseClient
-                    .from('ocean_messages')
+                // Пробуем ok_messages
+                let { data, error } = await supabaseClient
+                    .from('ok_messages')
                     .insert(messageData)
                     .select()
                     .single();
                     
-                if (error) throw error;
+                if (error) {
+                    console.log('Пробуем таблицу messages...');
+                    
+                    // Пробуем таблицу messages
+                    ({ data, error } = await supabaseClient
+                        .from('messages')
+                        .insert(messageData)
+                        .select()
+                        .single());
+                        
+                    if (error) throw error;
+                }
                 
                 // Показываем в океане
                 showMessageInOcean(data);
@@ -1210,15 +1068,32 @@
                 return;
             }
             
+            if (!currentUser.ok_id) {
+                showNotification('Пользователь не найден', 'warning');
+                return;
+            }
+            
             try {
-                const { data: messages, error } = await supabaseClient
-                    .from('ocean_messages')
+                // Пробуем ok_messages
+                let { data: messages, error } = await supabaseClient
+                    .from('ok_messages')
                     .select('*')
                     .neq('sender_ok_id', currentUser.ok_id)
                     .order('created_at', { ascending: false })
                     .limit(10);
                     
-                if (error) throw error;
+                if (error) {
+                    console.log('Пробуем таблицу messages...');
+                    
+                    ({ data: messages, error } = await supabaseClient
+                        .from('messages')
+                        .select('*')
+                        .neq('sender_ok_id', currentUser.ok_id)
+                        .order('created_at', { ascending: false })
+                        .limit(10));
+                        
+                    if (error) throw error;
+                }
                 
                 if (messages && messages.length > 0) {
                     const randomIndex = Math.floor(Math.random() * messages.length);
@@ -1226,7 +1101,7 @@
                     
                     showMessageInOcean(message, true);
                     
-                    showNotification('🎣 Вы поймали послание!', 'success');
+                    showNotification('🎣 Вы поймали послание из OK.ru!', 'success');
                     
                     // Обновляем статистику пойманных
                     const currentCaught = parseInt(document.getElementById('caught-count').textContent) || 0;
@@ -1234,7 +1109,7 @@
                     
                 } else {
                     const demoMessage = {
-                        content: "В океане пока нет посланий... Будьте первым!",
+                        content: "В океане пока нет посланий от других пользователей OK.ru... Будьте первым!",
                         created_at: new Date().toISOString()
                     };
                     showMessageInOcean(demoMessage, false);
@@ -1262,7 +1137,7 @@
                         "${message.content}"
                     </div>
                     <div class="message-meta">
-                        <span>${isCaught ? '🎣 Поймано' : '🌊 В океане'}</span>
+                        <span>${isCaught ? '🎣 Поймано из OK.ru' : '🌊 В океане OK.ru'}</span>
                         <span>${time}</span>
                     </div>
                 </div>
@@ -1279,18 +1154,19 @@
         
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function showAbout() {
-            showNotification('🌊 ВМесте - пространство для искреннего общения. Реальные люди из OK.ru', 'info');
+            showNotification('🌊 ВМесте - эксклюзивное приложение для пользователей OK.ru', 'ok');
         }
         
         function refreshProfile() {
             showNotification('Профиль обновлен', 'success');
             loadUserStats();
+            loadOnlineCount();
         }
         
         // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📱 DOM загружен');
-            console.log('🚀 Приложение запущено с URL:', window.location.href);
+            console.log('🚀 Приложение запущено через OK.ru');
             
             // Запускаем инициализацию
             setTimeout(initApp, 100);
