@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ВМесте 🌊 | Реальные знакомства</title>
+    <title>ВМесте 🌊 | Анонимный океан посланий</title>
+    
+    <!-- VK Bridge для OK.ru -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     
     <!-- Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -30,94 +33,33 @@
             color: var(--light);
             min-height: 100vh;
             line-height: 1.6;
+            padding: 20px;
         }
         
-        /* Loading Screen */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--dark);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            transition: opacity 0.5s ease;
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
         }
         
         .loader {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            margin-bottom: 30px;
-        }
-        
-        .loader-ocean {
-            width: 100%;
-            height: 100%;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--secondary);
             border-radius: 50%;
-            background: conic-gradient(from 0deg, var(--primary) 0%, var(--secondary) 100%);
-            animation: rotate 2s linear infinite;
-            mask: radial-gradient(circle, transparent 60%, black 61%);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
         
-        .loader-wave {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            animation: wave 2s ease-in-out infinite;
-        }
-        
-        .progress-container {
-            width: 300px;
-            height: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 4px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        
-        .loading-text {
-            font-size: 18px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        
-        .loading-percent {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--secondary);
-        }
-        
-        @keyframes rotate {
+        @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         
-        @keyframes wave {
-            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-            25% { transform: translate(-50%, -50%) rotate(10deg); }
-            75% { transform: translate(-50%, -50%) rotate(-10deg); }
-        }
-        
-        /* Main App */
         .app-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
             display: none;
         }
         
@@ -149,56 +91,15 @@
             animation: wave 3s ease-in-out infinite;
         }
         
-        /* Navigation */
-        .nav-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 15px;
-        }
-        
-        .nav-tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            background: transparent;
-            border: none;
-            color: white;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .nav-tab.active {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--accent);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
         
         /* Main Layout */
         .main-layout {
             display: grid;
-            grid-template-columns: 300px 1fr;
+            grid-template-columns: 300px 1fr 300px;
             gap: 25px;
         }
         
@@ -230,7 +131,6 @@
             border-radius: 50%;
             border: 3px solid var(--secondary);
             object-fit: cover;
-            background: rgba(255,255,255,0.1);
         }
         
         .profile-info h3 {
@@ -239,12 +139,12 @@
         }
         
         .location {
-            display: flex;
-            align-items: center;
-            gap: 5px;
             font-size: 14px;
             color: rgba(255,255,255,0.7);
             margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .status {
@@ -295,18 +195,17 @@
             margin-top: 5px;
         }
         
-        /* Content Areas */
-        .content-area {
+        /* Ocean Section */
+        .ocean-section {
             background: rgba(255,255,255,0.03);
             border-radius: 25px;
             padding: 30px;
             border: 2px solid rgba(74, 144, 226, 0.2);
             position: relative;
             overflow: hidden;
-            min-height: 500px;
         }
         
-        .content-area::before {
+        .ocean-section::before {
             content: '';
             position: absolute;
             top: 0;
@@ -316,13 +215,13 @@
             background: linear-gradient(90deg, var(--primary), var(--secondary));
         }
         
-        .content-title {
+        .ocean-title {
             text-align: center;
             margin-bottom: 30px;
             font-size: 24px;
         }
         
-        .content-title span {
+        .ocean-title span {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -357,155 +256,25 @@
             opacity: 0.7;
         }
         
-        /* People Grid */
-        .people-grid {
+        /* Action Buttons */
+        .action-buttons {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .person-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .person-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255,255,255,0.1);
-            border-color: var(--primary);
-        }
-        
-        .person-header {
-            display: flex;
-            align-items: center;
             gap: 15px;
-            margin-bottom: 15px;
-            position: relative;
+            margin-top: 30px;
         }
         
-        .person-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--secondary);
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .online-indicator {
-            position: absolute;
-            bottom: 2px;
-            left: 2px;
-            width: 10px;
-            height: 10px;
-            background: var(--secondary);
-            border-radius: 50%;
-            border: 2px solid var(--dark);
-        }
-        
-        .person-info h4 {
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-        
-        .person-location {
-            font-size: 12px;
-            color: rgba(255,255,255,0.6);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .person-bio {
-            font-size: 14px;
-            opacity: 0.8;
-            margin: 10px 0;
-            line-height: 1.4;
-        }
-        
-        /* Chat */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 500px;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .message {
-            margin-bottom: 15px;
-            max-width: 70%;
-        }
-        
-        .message.own {
-            margin-left: auto;
-        }
-        
-        .message-content {
-            background: rgba(74, 144, 226, 0.2);
-            padding: 12px 16px;
-            border-radius: 15px;
-            border-top-left-radius: 5px;
-        }
-        
-        .message.own .message-content {
-            background: rgba(80, 227, 194, 0.2);
-            border-top-left-radius: 15px;
-            border-top-right-radius: 5px;
-        }
-        
-        .message-time {
-            font-size: 11px;
-            color: rgba(255,255,255,0.5);
-            margin-top: 5px;
-            text-align: right;
-        }
-        
-        .chat-input-container {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .chat-input {
-            flex: 1;
-            padding: 15px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 15px;
-            color: white;
-            font-size: 16px;
-        }
-        
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        /* Buttons */
         .btn {
-            padding: 12px 24px;
+            padding: 16px 24px;
             border: none;
-            border-radius: 12px;
+            border-radius: 15px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
         
         .btn-primary {
@@ -515,7 +284,7 @@
         
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.3);
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
         }
         
         .btn-secondary {
@@ -528,9 +297,22 @@
             background: rgba(255,255,255,0.2);
         }
         
-        .btn-small {
-            padding: 8px 16px;
-            font-size: 14px;
+        /* Info Panel */
+        .info-panel {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .info-title {
+            color: var(--secondary);
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         /* Notification */
@@ -546,8 +328,6 @@
             z-index: 9999;
             animation: slideIn 0.3s ease;
             font-weight: 500;
-            max-width: 400px;
-            word-wrap: break-word;
         }
         
         @keyframes slideIn {
@@ -560,111 +340,86 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-            color: rgba(255,255,255,0.5);
+        /* Waves Animation */
+        .waves {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");
+            background-size: 1200px 100px;
+            animation: waves 15s linear infinite;
+            z-index: -1;
         }
         
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            opacity: 0.5;
+        @keyframes waves {
+            0% { background-position-x: 0; }
+            100% { background-position-x: 1200px; }
         }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loader">
-            <div class="loader-ocean"></div>
-            <div class="loader-wave">🌊</div>
-        </div>
-        
-        <div class="loading-text" id="loadingText">Загрузка ВМесте...</div>
-        <div class="loading-percent" id="loadingPercent">0%</div>
-        
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        
-        <div style="margin-top: 30px; font-size: 14px; opacity: 0.7; text-align: center; max-width: 400px;">
-            <p>"Бросай в пространство. Лови отклик. Общайся по-настоящему."</p>
-        </div>
+    <div class="waves"></div>
+    
+    <div id="loading" class="loading">
+        <div class="loader"></div>
+        <p>Загрузка ВМесте...</p>
+        <p id="loading-status">Инициализация приложения</p>
     </div>
     
-    <!-- Main App -->
-    <div class="app-container" id="appContainer">
+    <div class="app-container" id="app-container">
         <!-- Header -->
         <header class="header">
             <div class="logo">
                 <div class="logo-icon">🌊</div>
                 <h1>ВМесте</h1>
             </div>
-            <div class="status" id="connectionStatus">
+            <div class="status" id="connection-status">
                 <div class="status-dot"></div>
                 <span>Подключение...</span>
             </div>
         </header>
         
-        <!-- Navigation -->
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('ocean')">
-                🌊 Океан посланий
-            </button>
-            <button class="nav-tab" onclick="switchTab('people')">
-                👥 Найти людей
-            </button>
-            <button class="nav-tab" onclick="switchTab('chats')" id="chatsTabButton">
-                💬 Мои беседы
-            </button>
-        </div>
-        
         <!-- Main Content -->
-        <div class="main-layout">
+        <main class="main-layout">
             <!-- Left: Profile -->
             <aside class="profile-card">
-                <div class="profile-header">
-                    <img src="" alt="Avatar" class="avatar" id="userAvatar">
+                <div class="profile-header" id="profile-header">
+                    <img src="" alt="Avatar" class="avatar" id="user-avatar">
                     <div class="profile-info">
-                        <h3 id="userName">Загрузка...</h3>
-                        <div class="location" id="userLocation">
-                            📍 Определение местоположения...
+                        <h3 id="user-name">Загрузка...</h3>
+                        <div class="location" id="user-location">
+                            📍 Местоположение...
                         </div>
                         <div class="status">
                             <div class="status-dot"></div>
-                            <span id="userStatus">online</span>
+                            <span id="user-status">online</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <div class="stat-value" id="sentCount">0</div>
+                        <div class="stat-value" id="sent-count">0</div>
                         <div class="stat-label">Отправлено</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="caughtCount">0</div>
+                        <div class="stat-value" id="caught-count">0</div>
                         <div class="stat-label">Поймано</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="friendsCount">0</div>
-                        <div class="stat-label">Друзей</div>
+                        <div class="stat-value" id="likes-count">0</div>
+                        <div class="stat-label">Лайков</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="daysCount">1</div>
+                        <div class="stat-value" id="days-count">1</div>
                         <div class="stat-label">Дней с нами</div>
                     </div>
                 </div>
                 
-                <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
-                    <div style="font-size: 14px; opacity: 0.8; margin-bottom: 10px;">👤 Людей онлайн рядом:</div>
-                    <div style="font-size: 18px; font-weight: bold; color: var(--secondary);" id="nearbyCount">0</div>
-                </div>
-                
-                <div class="action-buttons" style="display: grid; gap: 10px;">
-                    <button class="btn btn-secondary" onclick="refreshData()">
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="refreshProfile()">
                         🔄 Обновить
                     </button>
                     <button class="btn btn-secondary" onclick="showAbout()">
@@ -673,51 +428,66 @@
                 </div>
             </aside>
             
-            <!-- Right: Content -->
-            <main>
-                <!-- Ocean Tab -->
-                <div class="content-area" id="oceanTab">
-                    <h2 class="content-title">
-                        <span>🌊 Океан посланий</span>
-                    </h2>
-                    
-                    <div style="display: grid; gap: 15px; margin-bottom: 30px;">
-                        <button class="btn btn-primary" onclick="showSendMessageModal()">
-                            ✍️ Бросить послание
-                        </button>
-                        <button class="btn btn-primary" onclick="catchRandomMessage()">
-                            🎣 Поймать послание
-                        </button>
-                    </div>
-                    
-                    <div id="messageDisplay">
-                        <!-- Messages will appear here -->
-                    </div>
+            <!-- Center: Ocean -->
+            <section class="ocean-section">
+                <h2 class="ocean-title">
+                    <span>🌊 Океан посланий</span>
+                </h2>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="showSendMessage()">
+                        ✍️ Бросить послание
+                    </button>
+                    <button class="btn btn-primary" onclick="catchRandomMessage()">
+                        🎣 Поймать послание
+                    </button>
                 </div>
                 
-                <!-- People Tab -->
-                <div class="content-area" id="peopleTab" style="display: none;">
-                    <h2 class="content-title">
-                        <span>👥 Найти людей</span>
-                    </h2>
-                    
-                    <div id="peopleList" class="people-grid">
-                        <!-- People will appear here -->
+                <div id="message-display" style="margin-top: 30px;">
+                    <div class="message-bubble">
+                        <div class="message-content">
+                            "Добро пожаловать в ВМесте! Бросьте своё первое послание в океан или поймайте чужое."
+                        </div>
+                        <div class="message-meta">
+                            <span>💬 Система</span>
+                            <span>Только что</span>
+                        </div>
                     </div>
+                </div>
+            </section>
+            
+            <!-- Right: Info -->
+            <aside class="info-panel">
+                <h3 class="info-title">📊 О приложении</h3>
+                <p style="margin-bottom: 15px;">
+                    <strong>"ВМесте"</strong> — это пространство для искреннего общения.
+                </p>
+                
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin: 15px 0;">
+                    <p style="font-size: 14px; font-style: italic; color: var(--secondary);">
+                        "Бросай в пространство. Лови отклик. Общайся по-настоящему."
+                    </p>
                 </div>
                 
-                <!-- Chats Tab -->
-                <div class="content-area" id="chatsTab" style="display: none;">
-                    <h2 class="content-title">
-                        <span>💬 Мои беседы</span>
-                    </h2>
-                    
-                    <div id="chatsList">
-                        <!-- Chats will appear here -->
-                    </div>
+                <p style="margin-bottom: 10px;">
+                    • <strong>Анонимность:</strong> Ваши послания не привязаны к профилю
+                </p>
+                <p style="margin-bottom: 10px;">
+                    • <strong>Случайность:</strong> Ловите послания со всего океана
+                </p>
+                <p style="margin-bottom: 10px;">
+                    • <strong>Искренность:</strong> Только настоящие мысли и чувства
+                </p>
+                
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <p style="font-size: 12px; opacity: 0.7;">
+                        🔗 Интеграция с OK.ru через VK Mini Apps<br>
+                        💾 База данных Supabase<br>
+                        🌐 Онлайн в реальном времени
+                    </p>
                 </div>
-            </main>
-        </div>
+            </aside>
+        </main>
     </div>
     
     <!-- Modals -->
@@ -726,7 +496,7 @@
             <h3 style="margin-bottom: 20px; color: var(--secondary);">✍️ Бросить послание в океан</h3>
             <textarea id="messageInput" placeholder="Что вы хотите сказать миру?" style="width: 100%; height: 150px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 16px; resize: vertical;"></textarea>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button onclick="sendMessageToOcean()" class="btn btn-primary" style="flex: 1;">
+                <button onclick="sendMessage()" class="btn btn-primary" style="flex: 1;">
                     🌊 Отправить
                 </button>
                 <button onclick="hideModal('sendMessageModal')" class="btn btn-secondary" style="flex: 1;">
@@ -736,35 +506,6 @@
         </div>
     </div>
     
-    <div id="chatModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: var(--dark); padding: 30px; border-radius: 20px; width: 90%; max-width: 600px; border: 2px solid var(--primary); height: 90%; max-height: 700px; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <img id="chatPersonAvatar" src="" alt="" style="width: 40px; height: 40px; border-radius: 50%;">
-                    <h3 style="color: var(--secondary);" id="chatPersonName">Чат</h3>
-                </div>
-                <button onclick="hideModal('chatModal')" class="btn btn-secondary btn-small">✕</button>
-            </div>
-            
-            <div class="chat-container">
-                <div class="chat-messages" id="chatMessages">
-                    <!-- Chat messages will appear here -->
-                </div>
-                
-                <div class="chat-input-container">
-                    <input type="text" 
-                           class="chat-input" 
-                           id="chatInput"
-                           placeholder="Введите сообщение..."
-                           onkeypress="if(event.key === 'Enter') sendChatMessage()">
-                    <button onclick="sendChatMessage()" class="btn btn-primary">
-                        Отправить
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ========== КОНФИГУРАЦИЯ ==========
         const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
@@ -774,22 +515,27 @@
         let supabaseClient = null;
         let currentUser = {
             ok_id: null,
-            first_name: null,
-            last_name: null,
-            avatar_url: null,
-            location: null,
-            is_online: true
+            vk_id: null,
+            first_name: '',
+            last_name: '',
+            avatar_url: '',
+            location: '',
+            city: '',
+            supabase_id: null
         };
         
         // ========== УТИЛИТЫ ==========
-        function updateProgress(percent, message) {
-            const progressBar = document.getElementById('progressBar');
-            const loadingPercent = document.getElementById('loadingPercent');
-            const loadingText = document.getElementById('loadingText');
-            
-            if (progressBar) progressBar.style.width = percent + '%';
-            if (loadingPercent) loadingPercent.textContent = Math.round(percent) + '%';
-            if (loadingText) loadingText.textContent = message;
+        function updateLoadingStatus(message) {
+            const statusEl = document.getElementById('loading-status');
+            if (statusEl) {
+                statusEl.textContent = message;
+            }
+            console.log('🔄 ' + message);
+        }
+        
+        function showApp() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
         }
         
         function showNotification(message, type = 'success') {
@@ -797,7 +543,7 @@
             notification.className = 'notification';
             notification.style.background = type === 'success' ? '#50E3C2' : 
                                            type === 'error' ? '#FF6B8B' : 
-                                           '#4A90E2';
+                                           type === 'warning' ? '#FFA500' : '#4A90E2';
             notification.textContent = message;
             document.body.appendChild(notification);
             
@@ -807,401 +553,422 @@
             }, 3000);
         }
         
-        function showApp() {
-            const loadingScreen = document.getElementById('loadingScreen');
-            const appContainer = document.getElementById('appContainer');
-            
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                appContainer.style.display = 'block';
-                showNotification('🌊 Добро пожаловать в ВМесте!', 'success');
-            }, 500);
+        function getAvatarFallback(firstName, lastName) {
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName + ' ' + lastName)}&background=4A90E2&color=fff&size=70`;
         }
         
         // ========== ПОЛУЧЕНИЕ ДАННЫХ ИЗ OK.RU ==========
         function parseUserDataFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
-            let okId = null, firstName = '', lastName = '', avatarUrl = null, location = null;
-
-            // 1. Пытаемся получить ID (самый важный параметр)
-            const idPriorityList = ['vk_ok_user_id', 'logged_user_id', 'vk_user_id', 'viewer_id', 'uid'];
-            for (const param of idPriorityList) {
+            console.log('📋 Все параметры URL:', Object.fromEntries(urlParams.entries()));
+            
+            let okId = null, firstName = '', lastName = '', avatarUrl = '', location = '', city = '';
+            
+            // 1. Пытаемся получить ID пользователя OK
+            const idParams = ['vk_ok_user_id', 'logged_user_id', 'vk_user_id', 'uid', 'viewer_id'];
+            for (const param of idParams) {
                 const value = urlParams.get(param);
                 if (value && value !== 'undefined' && value !== '0') {
                     okId = value;
-                    console.log(`✅ Найден ID пользователя: ${okId} (из параметра: ${param})`);
+                    console.log(`✅ Найден ID: ${okId} (параметр: ${param})`);
                     break;
                 }
             }
-
-            // 2. Пытаемся получить отдельно имя и фамилию
+            
+            // 2. Пытаемся получить отдельные параметры имени
             const firstNameParam = urlParams.get('first_name');
             const lastNameParam = urlParams.get('last_name');
             
             if (firstNameParam && lastNameParam) {
-                // Если переданы отдельные параметры имени и фамилии
+                // Если переданы отдельно имя и фамилия
                 firstName = decodeURIComponent(firstNameParam);
                 lastName = decodeURIComponent(lastNameParam);
-                console.log(`✅ Получено имя отдельно: ${firstName} ${lastName}`);
+                console.log(`✅ Имя отдельно: ${firstName} ${lastName}`);
             } else {
-                // Пытаемся получить полное имя и разбить его
+                // Пытаемся получить полное имя
                 const nameParam = urlParams.get('user_name') || urlParams.get('full_name') || urlParams.get('name');
                 if (nameParam) {
-                    const nameParts = decodeURIComponent(nameParam).split(' ');
+                    const nameParts = decodeURIComponent(nameParam).trim().split(' ');
                     firstName = nameParts[0] || '';
-                    lastName = nameParts.slice(1).join(' ') || '';
                     
-                    // Если имя состоит из одного слова, используем его как имя
+                    if (nameParts.length > 1) {
+                        lastName = nameParts.slice(1).join(' ');
+                    }
+                    
+                    // Если имя состоит из одного слова - используем как имя
                     if (nameParts.length === 1) {
                         firstName = nameParts[0];
                         lastName = '';
                     }
-                    console.log(`✅ Получено имя из строки: ${firstName} ${lastName}`);
+                    
+                    console.log(`✅ Имя из строки: ${firstName} ${lastName}`);
                 }
             }
-
-            // 3. Пытаемся получить аватарку ОК (обрабатываем специфичный формат)
-            const avatarParam = urlParams.get('user_image') || urlParams.get('photo_200') || urlParams.get('photo');
-            if (avatarParam) {
-                avatarUrl = decodeURIComponent(avatarParam);
-                // Исправляем URL аватарки Одноклассников для лучшего качества
-                if (avatarUrl.includes('i.okcdn.ru')) {
-                    avatarUrl = avatarUrl.replace(/(?:&|\?)size=\w+/, '') + '&size=200';
-                }
-                console.log(`✅ Получена аватарка: ${avatarUrl}`);
-            }
-
-            // 4. Пытаемся получить местоположение из профиля OK
-            const locationParam = urlParams.get('ip_geo_location') || urlParams.get('location') || urlParams.get('city');
-            if (locationParam) {
-                const locParts = decodeURIComponent(locationParam).split(',');
-                // Формат часто "RU,Москва,Москва" - берем второй элемент
-                location = locParts[1] || locParts[0] || null;
-                console.log(`✅ Получено местоположение: ${location}`);
-            }
-
-            // 5. Проверяем, достаточно ли данных получено
-            const hasEnoughData = okId && firstName && (firstName !== 'Пользователь');
             
-            if (!hasEnoughData) {
-                // Недостаточно данных - запускаем демо-режим
-                okId = okId || 'demo_' + Math.random().toString(36).substr(2, 9);
-                console.log('⚠️ Запуск в демо-режиме. ID:', okId);
-                
-                if (!firstName || firstName === 'Пользователь') {
-                    const demoNames = [
-                        {first: 'Алексей', last: 'Иванов', city: 'Москва'},
-                        {first: 'Мария', last: 'Петрова', city: 'Санкт-Петербург'},
-                        {first: 'Дмитрий', last: 'Сидоров', city: 'Новосибирск'},
-                        {first: 'Екатерина', last: 'Кузнецова', city: 'Екатеринбург'},
-                        {first: 'Анна', last: 'Смирнова', city: 'Казань'}
-                    ];
-                    const randomDemo = demoNames[Math.floor(Math.random() * demoNames.length)];
-                    firstName = firstName || randomDemo.first;
-                    lastName = lastName || randomDemo.last;
-                    location = location || randomDemo.city;
+            // 3. Пытаемся получить аватарку ОК
+            const avatarParams = ['user_image', 'photo_200', 'photo_100', 'photo_50', 'photo'];
+            for (const param of avatarParams) {
+                const value = urlParams.get(param);
+                if (value) {
+                    avatarUrl = decodeURIComponent(value);
+                    
+                    // Исправляем URL аватарки Одноклассников
+                    if (avatarUrl.includes('i.okcdn.ru')) {
+                        avatarUrl = avatarUrl.replace(/(?:&|\?)size=\w+/, '') + '&size=200';
+                    }
+                    
+                    console.log(`✅ Аватар: ${avatarUrl} (параметр: ${param})`);
+                    break;
                 }
-                
-                showNotification('⚠️ Запущен демо-режим. Для реальных данных запустите приложение через OK.ru', 'warning');
-            } else {
-                console.log('✅ Запуск с реальными данными из OK.ru');
             }
-
-            // Создаем полное имя
-            const fullName = `${firstName} ${lastName}`.trim();
+            
+            // 4. Пытаемся получить местоположение
+            const locationParams = ['ip_geo_location', 'location', 'city', 'geo_location'];
+            for (const param of locationParams) {
+                const value = urlParams.get(param);
+                if (value) {
+                    const locStr = decodeURIComponent(value);
+                    
+                    // Формат часто "RU,Москва,Москва" или просто "Москва"
+                    if (locStr.includes(',')) {
+                        const parts = locStr.split(',');
+                        location = parts[1] || parts[0] || '';
+                        city = parts[1] || parts[0] || '';
+                    } else {
+                        location = locStr;
+                        city = locStr;
+                    }
+                    
+                    console.log(`✅ Местоположение: ${location} (параметр: ${param})`);
+                    break;
+                }
+            }
+            
+            // 5. VK ID (для совместимости)
+            const vkId = urlParams.get('vk_user_id') || okId;
             
             return {
                 ok_id: okId,
-                first_name: firstName,
-                last_name: lastName,
-                full_name: fullName || 'Гость OK',
+                vk_id: vkId,
+                first_name: firstName || 'Гость',
+                last_name: lastName || '',
                 avatar_url: avatarUrl,
                 location: location,
-                is_online: true
+                city: city,
+                has_real_data: !!(okId && firstName && firstName !== 'Гость')
             };
         }
         
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
-        async function initApp() {
-            try {
-                updateProgress(10, 'Загрузка библиотек...');
-                
-                // 1. Инициализируем Supabase
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                updateProgress(30, 'Подключение к базе данных...');
-                
-                // 2. Получаем данные пользователя
-                updateProgress(40, 'Загрузка профиля OK.ru...');
-                const userData = parseUserDataFromURL();
-                
-                console.log('Обработанные данные пользователя:', userData);
-                
-                // 3. Сохраняем данные
-                currentUser = userData;
-                
-                // 4. Обновляем интерфейс сразу
-                updateUserProfileUI();
-                
-                // 5. Сохраняем в базу
-                updateProgress(50, 'Сохранение профиля...');
-                await saveUserToDatabase();
-                
-                // 6. Загружаем начальные данные
-                updateProgress(70, 'Загрузка данных...');
-                await Promise.all([
-                    loadOnlineUsers(),
-                    loadOceanMessages(),
-                    loadUserStats()
-                ]);
-                
-                updateProgress(100, 'Готово!');
-                setTimeout(showApp, 500);
-                
-            } catch (error) {
-                console.error('❌ Ошибка инициализации:', error);
-                
-                // Все равно показываем приложение с демо-данными
-                setTimeout(() => {
-                    showApp();
-                    showNotification('Запущен с демо-данными', 'warning');
-                }, 500);
-            }
-        }
-        
-        function updateUserProfileUI() {
+        // ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ПОЛЬЗОВАТЕЛЯ ==========
+        function updateUserInterface(userData) {
             // Обновляем имя
-            document.getElementById('userName').textContent = currentUser.full_name;
+            const fullName = `${userData.first_name} ${userData.last_name}`.trim();
+            document.getElementById('user-name').textContent = fullName;
             
-            // Обновляем аватарку
-            const avatarImg = document.getElementById('userAvatar');
-            if (currentUser.avatar_url) {
-                console.log('Устанавливаем аватар:', currentUser.avatar_url);
-                avatarImg.src = currentUser.avatar_url;
+            // Обновляем аватар
+            const avatarImg = document.getElementById('user-avatar');
+            if (userData.avatar_url) {
+                avatarImg.src = userData.avatar_url;
                 avatarImg.onerror = function() {
-                    console.log('Аватарка не загрузилась, используем fallback');
-                    this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.full_name)}&background=4A90E2&color=fff&size=70`;
+                    this.src = getAvatarFallback(userData.first_name, userData.last_name);
                 };
             } else {
-                console.log('Аватарки нет, используем fallback');
-                avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.full_name)}&background=4A90E2&color=fff&size=70`;
+                avatarImg.src = getAvatarFallback(userData.first_name, userData.last_name);
             }
             
             // Обновляем местоположение
-            if (currentUser.location) {
-                document.getElementById('userLocation').innerHTML = `📍 ${currentUser.location}`;
+            if (userData.location || userData.city) {
+                const location = userData.location || userData.city;
+                document.getElementById('user-location').innerHTML = `📍 ${location}`;
             } else {
-                document.getElementById('userLocation').innerHTML = '📍 Не указано';
+                document.getElementById('user-location').innerHTML = '📍 Не указано';
             }
             
-            // Обновляем статус
-            document.getElementById('connectionStatus').innerHTML = `
-                <div class="status-dot"></div>
-                <span>Подключено к OK.ru</span>
-            `;
+            // Обновляем статус подключения
+            if (userData.has_real_data) {
+                document.getElementById('connection-status').innerHTML = `
+                    <div class="status-dot" style="background: #50E3C2"></div>
+                    <span>Подключено к OK.ru</span>
+                `;
+            } else {
+                document.getElementById('connection-status').innerHTML = `
+                    <div class="status-dot" style="background: #FFA500"></div>
+                    <span>Демо-режим</span>
+                `;
+            }
+            
+            // Сохраняем данные в глобальную переменную
+            currentUser = {
+                ...currentUser,
+                ...userData,
+                full_name: fullName
+            };
+            
+            console.log('👤 Пользователь обновлен:', currentUser);
         }
         
-        async function saveUserToDatabase() {
-            if (!supabaseClient) return;
+        // ========== СОХРАНЕНИЕ В БАЗУ ДАННЫХ ==========
+        async function saveUserToDatabase(userData) {
+            if (!supabaseClient) {
+                console.warn('Supabase не инициализирован');
+                return null;
+            }
             
             try {
                 const { data, error } = await supabaseClient
                     .from('profiles')
                     .upsert({
-                        ok_id: currentUser.ok_id,
-                        first_name: currentUser.first_name,
-                        last_name: currentUser.last_name,
-                        avatar_url: currentUser.avatar_url,
-                        location: currentUser.location,
+                        ok_id: userData.ok_id,
+                        vk_id: userData.vk_id,
+                        first_name: userData.first_name,
+                        last_name: userData.last_name,
+                        full_name: `${userData.first_name} ${userData.last_name}`.trim(),
+                        avatar_url: userData.avatar_url,
+                        location: userData.location || userData.city,
+                        city: userData.city,
                         is_online: true,
                         last_seen: new Date().toISOString(),
                         created_at: new Date().toISOString()
                     }, {
-                        onConflict: 'ok_id'
+                        onConflict: 'ok_id',
+                        ignoreDuplicates: false
                     })
                     .select()
                     .single();
                     
                 if (error) {
-                    console.error('Ошибка сохранения профиля:', error);
+                    console.error('❌ Ошибка сохранения профиля:', error);
                     
-                    // Если таблицы нет, создаем её
+                    // Если таблицы нет, предлагаем создать
                     if (error.message.includes('does not exist')) {
-                        console.log('Таблица profiles не существует, создаем...');
-                        await createDatabaseTables();
-                        // Пробуем еще раз
-                        await saveUserToDatabase();
+                        console.log('⚠️ Таблица profiles не существует');
+                        showNotification('Таблица profiles не найдена в базе данных', 'warning');
                     }
-                    return;
+                    return null;
                 }
                 
-                console.log('✅ Профиль сохранен в базе данных');
+                console.log('✅ Профиль сохранен в базе данных:', data);
+                currentUser.supabase_id = data.id;
+                return data;
                 
             } catch (error) {
                 console.error('Ошибка при сохранении:', error);
+                return null;
             }
         }
         
-        async function createDatabaseTables() {
-            // Создаем таблицу profiles
-            try {
-                await supabaseClient.rpc('create_profiles_table');
-            } catch (error) {
-                console.log('Не удалось создать таблицу через RPC, используем альтернативный метод');
-            }
-        }
-        
-        // ========== ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ==========
-        async function loadOnlineUsers() {
-            if (!supabaseClient) return;
+        // ========== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ==========
+        async function initApp() {
+            updateLoadingStatus('Инициализация приложения...');
             
             try {
-                // Загружаем пользователей, которые были онлайн в последние 10 минут
-                const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-                
-                const { data: users, error } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .neq('ok_id', currentUser.ok_id)
-                    .gt('last_seen', tenMinutesAgo)
-                    .order('last_seen', { ascending: false })
-                    .limit(50);
-                    
-                if (error) throw error;
-                
-                // Обновляем счетчик
-                document.getElementById('nearbyCount').textContent = users?.length || 0;
-                
-                // Сохраняем пользователей для отображения
-                window.allUsers = users || [];
-                
-                // Если открыта вкладка "Люди", показываем их
-                if (document.getElementById('peopleTab').style.display !== 'none') {
-                    displayPeople(users || []);
+                // 1. Инициализируем Supabase
+                if (typeof supabase === 'undefined') {
+                    throw new Error('Supabase SDK не загружен');
                 }
                 
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('✅ Supabase подключен');
+                
+                // 2. Получаем данные пользователя из OK.ru
+                updateLoadingStatus('Получение данных пользователя...');
+                const userData = parseUserDataFromURL();
+                
+                if (!userData.ok_id || !userData.first_name || userData.first_name === 'Гость') {
+                    console.log('⚠️ Недостаточно данных из OK, используем демо-режим');
+                    await startDemoMode();
+                } else {
+                    console.log('✅ Получены реальные данные из OK');
+                    
+                    // Обновляем интерфейс
+                    updateUserInterface(userData);
+                    
+                    // Сохраняем в базу данных
+                    updateLoadingStatus('Сохранение профиля...');
+                    await saveUserToDatabase(userData);
+                    
+                    showNotification(`Добро пожаловать, ${userData.first_name}!`, 'success');
+                }
+                
+                // 3. Загружаем статистику пользователя
+                updateLoadingStatus('Загрузка статистики...');
+                await loadUserStats();
+                
+                // 4. Загружаем сообщения из океана
+                await loadOceanMessages();
+                
+                // 5. Показываем приложение
+                showApp();
+                updateLoadingStatus('Готово!');
+                
             } catch (error) {
-                console.error('Ошибка загрузки пользователей:', error);
-                window.allUsers = [];
-                document.getElementById('nearbyCount').textContent = '0';
+                console.error('❌ Критическая ошибка инициализации:', error);
+                updateLoadingStatus('Ошибка: ' + error.message);
+                
+                // Запускаем демо-режим в случае ошибки
+                setTimeout(async () => {
+                    await startDemoMode();
+                    await loadUserStats();
+                    showApp();
+                    showNotification('Запущен в демо-режиме', 'warning');
+                }, 1500);
             }
         }
         
-        function displayPeople(people) {
-            const container = document.getElementById('peopleList');
+        // ========== ДЕМО-РЕЖИМ ==========
+        async function startDemoMode() {
+            console.log('🚀 Запуск демо-режима');
             
-            if (!people || people.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1 / -1;">
-                        <div class="empty-icon">👤</div>
-                        <p>Пока нет других пользователей</p>
-                        <p style="font-size: 14px; margin-top: 10px;">Расскажите друзьям о ВМесте!</p>
-                    </div>
-                `;
+            // Создаем демо-пользователя
+            const demoNames = [
+                {first: 'Алексей', last: 'Иванов', city: 'Москва'},
+                {first: 'Мария', last: 'Петрова', city: 'Санкт-Петербург'},
+                {first: 'Дмитрий', last: 'Сидоров', city: 'Новосибирск'},
+                {first: 'Екатерина', last: 'Кузнецова', city: 'Екатеринбург'},
+                {first: 'Анна', last: 'Смирнова', city: 'Казань'}
+            ];
+            
+            const randomDemo = demoNames[Math.floor(Math.random() * demoNames.length)];
+            
+            const demoUser = {
+                ok_id: 'demo_' + Math.random().toString(36).substr(2, 9),
+                vk_id: 'demo_vk_' + Math.random().toString(36).substr(2, 9),
+                first_name: randomDemo.first,
+                last_name: randomDemo.last,
+                avatar_url: '',
+                location: randomDemo.city,
+                city: randomDemo.city,
+                has_real_data: false
+            };
+            
+            updateUserInterface(demoUser);
+            
+            // Сохраняем в базу (если Supabase доступен)
+            if (supabaseClient) {
+                try {
+                    await saveUserToDatabase(demoUser);
+                } catch (error) {
+                    console.log('⚠️ Не удалось сохранить демо-пользователя в базу');
+                }
+            }
+            
+            return demoUser;
+        }
+        
+        // ========== ЗАГРУЗКА СТАТИСТИКИ ==========
+        async function loadUserStats() {
+            if (!currentUser.ok_id || !supabaseClient) {
+                // Устанавливаем демо-статистику
+                document.getElementById('sent-count').textContent = '5';
+                document.getElementById('caught-count').textContent = '3';
+                document.getElementById('likes-count').textContent = '12';
+                document.getElementById('days-count').textContent = '1';
                 return;
             }
             
-            container.innerHTML = people.map(person => {
-                const fullName = `${person.first_name} ${person.last_name}`.trim();
-                const avatarUrl = person.avatar_url || 
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=4A90E2&color=fff&size=50`;
+            try {
+                const { data: messages, error } = await supabaseClient
+                    .from('ocean_messages')
+                    .select('*')
+                    .eq('sender_ok_id', currentUser.ok_id);
+                    
+                if (error) {
+                    console.error('Ошибка загрузки статистики:', error);
+                    return;
+                }
                 
-                return `
-                <div class="person-card" onclick="startChat('${person.ok_id}', '${fullName}', '${person.avatar_url || ''}')">
-                    <div class="person-header">
-                        <div style="position: relative;">
-                            <img src="${avatarUrl}" 
-                                 alt="${person.first_name}" 
-                                 class="person-avatar">
-                            ${person.is_online ? '<div class="online-indicator"></div>' : ''}
-                        </div>
-                        <div class="person-info">
-                            <h4>${fullName}</h4>
-                            <div class="person-location">
-                                📍 ${person.location || 'Не указано'}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="person-bio">
-                        ${person.bio || 'Ищет новых друзей'}
-                    </div>
-                    <button class="btn btn-primary btn-small" style="width: 100%; margin-top: 10px;">
-                        💬 Написать
-                    </button>
-                </div>
-                `;
-            }).join('');
+                const sent = messages ? messages.length : 0;
+                const caught = messages ? messages.filter(m => m.caught_by).length : 0;
+                const likes = messages ? messages.reduce((sum, m) => sum + (m.likes || 0), 0) : 0;
+                
+                document.getElementById('sent-count').textContent = sent;
+                document.getElementById('caught-count').textContent = caught;
+                document.getElementById('likes-count').textContent = likes;
+                document.getElementById('days-count').textContent = '1';
+                
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+            }
         }
         
-        // ========== ОКЕАН ПОСЛАНИЙ ==========
+        // ========== РАБОТА С ОКЕАНОМ ПОСЛАНИЙ ==========
         async function loadOceanMessages() {
+            if (!supabaseClient) return;
+            
             try {
                 const { data: messages, error } = await supabaseClient
                     .from('ocean_messages')
                     .select('*')
                     .order('created_at', { ascending: false })
-                    .limit(10);
+                    .limit(3);
                     
-                if (error) throw error;
-                
-                const container = document.getElementById('messageDisplay');
-                
-                if (!messages || messages.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">🌊</div>
-                            <p>Океан посланий пуст</p>
-                            <p style="font-size: 14px; margin-top: 10px;">Бросьте первое послание!</p>
-                        </div>
-                    `;
+                if (error) {
+                    console.error('Ошибка загрузки сообщений:', error);
                     return;
                 }
                 
-                container.innerHTML = messages.map(msg => `
-                    <div class="message-bubble">
-                        <div class="message-content">
-                            "${msg.content}"
-                        </div>
-                        <div class="message-meta">
-                            <span>🌊 В океане</span>
-                            <span>${new Date(msg.created_at).toLocaleDateString('ru-RU')}</span>
-                        </div>
-                    </div>
-                `).join('');
+                if (messages && messages.length > 0) {
+                    const display = document.getElementById('message-display');
+                    display.innerHTML = '';
+                    
+                    messages.forEach(message => {
+                        showMessageInOcean(message, false);
+                    });
+                }
                 
             } catch (error) {
-                console.error('Ошибка загрузки сообщений:', error);
+                console.error('Ошибка:', error);
             }
         }
         
-        async function sendMessageToOcean() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
+        function showSendMessage() {
+            document.getElementById('sendMessageModal').style.display = 'flex';
+            document.getElementById('messageInput').focus();
+        }
+        
+        function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const text = messageInput.value.trim();
             
             if (!text) {
                 showNotification('Введите текст послания', 'warning');
                 return;
             }
             
+            if (!supabaseClient) {
+                showNotification('База данных недоступна', 'error');
+                return;
+            }
+            
             try {
-                const { error } = await supabaseClient
+                const { data, error } = await supabaseClient
                     .from('ocean_messages')
                     .insert({
                         content: text,
                         sender_ok_id: currentUser.ok_id,
                         sender_name: currentUser.full_name,
+                        sender_avatar: currentUser.avatar_url,
+                        is_anonymous: true,
                         created_at: new Date().toISOString()
-                    });
+                    })
+                    .select()
+                    .single();
                     
                 if (error) throw error;
                 
-                input.value = '';
+                // Показываем в океане
+                showMessageInOcean(data);
+                messageInput.value = '';
                 hideModal('sendMessageModal');
-                showNotification('✅ Послание брошено в океан!', 'success');
                 
-                // Обновляем список
-                await loadOceanMessages();
-                await updateUserStats();
+                // Обновляем статистику
+                await loadUserStats();
+                
+                showNotification('✅ Послание брошено в океан!', 'success');
                 
             } catch (error) {
                 console.error('Ошибка отправки:', error);
@@ -1210,7 +977,10 @@
         }
         
         async function catchRandomMessage() {
-            showNotification('🎣 Ловим случайное послание...', 'info');
+            if (!supabaseClient) {
+                showNotification('База данных недоступна', 'warning');
+                return;
+            }
             
             try {
                 const { data: messages, error } = await supabaseClient
@@ -1226,28 +996,21 @@
                     const randomIndex = Math.floor(Math.random() * messages.length);
                     const message = messages[randomIndex];
                     
-                    const container = document.getElementById('messageDisplay');
-                    const bubble = document.createElement('div');
-                    bubble.className = 'message-bubble';
-                    bubble.innerHTML = `
-                        <div class="message-content">
-                            "${message.content}"
-                        </div>
-                        <div class="message-meta">
-                            <span>🎣 Поймано</span>
-                            <span>Только что</span>
-                        </div>
-                    `;
+                    showMessageInOcean(message, true);
                     
-                    container.insertBefore(bubble, container.firstChild);
+                    showNotification('🎣 Вы поймали послание!', 'success');
                     
-                    // Обновляем статистику
-                    await updateCaughtCount();
-                    
-                    showNotification('🎉 Вы поймали послание!', 'success');
+                    // Обновляем статистику пойманных
+                    const currentCaught = parseInt(document.getElementById('caught-count').textContent) || 0;
+                    document.getElementById('caught-count').textContent = currentCaught + 1;
                     
                 } else {
-                    showNotification('🌊 В океане пока нет посланий от других', 'info');
+                    const demoMessage = {
+                        content: "В океане пока нет посланий... Будьте первым!",
+                        created_at: new Date().toISOString()
+                    };
+                    showMessageInOcean(demoMessage, false);
+                    showNotification('🌊 Океан пуст. Бросьте первое послание!', 'info');
                 }
                 
             } catch (error) {
@@ -1256,127 +1019,62 @@
             }
         }
         
-        // ========== СТАТИСТИКА ==========
-        async function loadUserStats() {
-            try {
-                // Отправленные сообщения
-                const { count: sentCount } = await supabaseClient
-                    .from('ocean_messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('sender_ok_id', currentUser.ok_id);
-                
-                document.getElementById('sentCount').textContent = sentCount || 0;
-                
-                // Пойманные сообщения
-                await updateCaughtCount();
-                
-                // Друзья (пользователи, с которыми есть переписка)
-                document.getElementById('friendsCount').textContent = '0';
-                
-                // Дни с нами
-                document.getElementById('daysCount').textContent = '1';
-                
-            } catch (error) {
-                console.error('Ошибка статистики:', error);
-            }
-        }
-        
-        async function updateCaughtCount() {
-            try {
-                const { count: caughtCount } = await supabaseClient
-                    .from('ocean_messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('caught_by', currentUser.ok_id);
-                    
-                document.getElementById('caughtCount').textContent = caughtCount || 0;
-            } catch (error) {
-                console.error('Ошибка обновления caughtCount:', error);
-            }
-        }
-        
-        async function updateUserStats() {
-            await loadUserStats();
-        }
-        
-        // ========== ЧАТ ==========
-        async function startChat(personOkId, personName, personAvatar) {
-            // Здесь будет логика начала чата
-            showNotification(`Начинаем чат с ${personName}`, 'info');
-        }
-        
-        // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
-        function switchTab(tabName) {
-            // Скрываем все вкладки
-            document.getElementById('oceanTab').style.display = 'none';
-            document.getElementById('peopleTab').style.display = 'none';
-            document.getElementById('chatsTab').style.display = 'none';
-            
-            // Убираем активный класс у всех кнопок
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
+        function showMessageInOcean(message, isCaught = false) {
+            const display = document.getElementById('message-display');
+            const time = new Date(message.created_at).toLocaleString('ru-RU', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
             });
             
-            // Показываем выбранную вкладку
-            document.getElementById(tabName + 'Tab').style.display = 'block';
+            const messageHtml = `
+                <div class="message-bubble">
+                    <div class="message-content">
+                        "${message.content}"
+                    </div>
+                    <div class="message-meta">
+                        <span>${isCaught ? '🎣 Поймано' : '🌊 В океане'}</span>
+                        <span>${time}</span>
+                    </div>
+                </div>
+            `;
             
-            // Добавляем активный класс кнопке
-            event.target.classList.add('active');
+            display.innerHTML = messageHtml + display.innerHTML;
             
-            // Загружаем данные для вкладки если нужно
-            if (tabName === 'people' && (!window.allUsers || window.allUsers.length === 0)) {
-                loadOnlineUsers();
+            // Ограничиваем количество сообщений
+            const bubbles = display.querySelectorAll('.message-bubble');
+            if (bubbles.length > 5) {
+                bubbles[bubbles.length - 1].remove();
             }
         }
         
-        function showSendMessageModal() {
-            document.getElementById('sendMessageModal').style.display = 'flex';
-            document.getElementById('messageInput').focus();
-        }
-        
-        function hideModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-        
-        async function refreshData() {
-            showNotification('Обновление данных...', 'info');
-            await Promise.all([
-                loadOnlineUsers(),
-                loadOceanMessages(),
-                updateUserStats()
-            ]);
-            showNotification('Данные обновлены', 'success');
-        }
-        
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function showAbout() {
-            showNotification(`
-🌊 ВМесте - пространство для искреннего общения
-
-• Реальные люди с реальными именами из OK.ru
-• Настоящие аватарки из профилей Одноклассников
-• Местоположение из профиля OK.ru
-• Анонимный океан посланий
-
-"Бросай в пространство. Лови отклик. Общайся по-настоящему."
-            `, 'info');
+            showNotification('🌊 ВМесте - пространство для искреннего общения. Реальные люди из OK.ru', 'info');
         }
         
-        // ========== ЗАПУСК ==========
+        function refreshProfile() {
+            showNotification('Профиль обновлен', 'success');
+            loadUserStats();
+        }
+        
+        // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Запуск ВМесте...');
+            console.log('📱 DOM загружен');
+            console.log('🚀 Приложение запущено с URL:', window.location.href);
             
             // Запускаем инициализацию
-            setTimeout(initApp, 1000);
+            setTimeout(initApp, 100);
         });
         
         // Делаем функции глобальными
-        window.switchTab = switchTab;
-        window.showSendMessageModal = showSendMessageModal;
-        window.sendMessageToOcean = sendMessageToOcean;
+        window.showSendMessage = showSendMessage;
         window.catchRandomMessage = catchRandomMessage;
+        window.sendMessage = sendMessage;
         window.hideModal = hideModal;
-        window.startChat = startChat;
-        window.refreshData = refreshData;
         window.showAbout = showAbout;
+        window.refreshProfile = refreshProfile;
     </script>
 </body>
 </html>
