@@ -5,7 +5,24 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self' https:; frame-ancestors https://ok.ru https://*.ok.ru https://vk.com https://*.vk.com;"
+          "value": ""
+        },
+        {
+          "key": "X-Content-Security-Policy",
+          "value": ""
+        },
+        {
+          "key": "X-WebKit-CSP",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors https://ok.ru https://*.ok.ru;"
         }
       ]
     }
