@@ -1,37 +1,17 @@
 {
-  "version": 2,
-  "public": true,
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
         {
           "key": "X-Frame-Options",
-          "value": "ALLOWALL"
+          "value": "ALLOW-FROM https://ok.ru"
         },
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://ok.ru https://*.ok.ru https://odnoklassniki.ru https://*.odnoklassniki.ru"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "value": "frame-ancestors https://ok.ru https://*.ok.ru;"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
   ]
 }
