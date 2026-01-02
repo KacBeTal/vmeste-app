@@ -2,19 +2,25 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="frame-ancestors https://ok.ru https://*.ok.ru;">
-    <title>ВМесте - OK.ru тест</title>
+    <title>Тест для OK.ru</title>
+    <!-- Убираем ВСЕ meta CSP теги! -->
 </head>
-<body style="padding: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
-    <h1>🌊 ВМесте - OK.ru версия</h1>
-    <p>Это упрощенная версия, которая точно работает в iframe OK.ru</p>
-    <p>Домен: <strong id="domain"></strong></p>
-    <p>В iframe: <strong id="iframe-status"></strong></p>
+<body style="padding: 20px; font-family: Arial;">
+    <h1>Тестовая страница для OK.ru</h1>
+    <p>Если вы видите этот текст в iframe OK.ru — успех!</p>
+    <p>URL: <span id="url"></span></p>
+    <p>В iframe: <span id="iframe"></span></p>
     
     <script>
-        document.getElementById('domain').textContent = window.location.hostname;
-        document.getElementById('iframe-status').textContent = 
-            (window.self !== window.top) ? '✅ Да' : '❌ Нет (открыт напрямую)';
+        document.getElementById('url').textContent = window.location.href;
+        document.getElementById('iframe').textContent = 
+            window.self !== window.top ? 'ДА' : 'НЕТ';
+            
+        // Проверяем доступ к OK API
+        if (typeof FAPI !== 'undefined') {
+            console.log('OK API доступен');
+            document.body.innerHTML += '<p>✅ OK API доступен</p>';
+        }
     </script>
 </body>
 </html>
