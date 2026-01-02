@@ -822,30 +822,47 @@
         // ========== ПОЛУЧЕНИЕ ДАННЫХ ИЗ OK.RU ==========
         function parseUserDataFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
-            let okId = null, firstName = 'Пользователь', lastName = 'OK', avatarUrl = null, location = null;
+            let okId = null, firstName = '', lastName = '', avatarUrl = null, location = null;
 
             // 1. Пытаемся получить ID (самый важный параметр)
-            const idPriorityList = ['vk_ok_user_id', 'logged_user_id', 'vk_user_id', 'viewer_id'];
+            const idPriorityList = ['vk_ok_user_id', 'logged_user_id', 'vk_user_id', 'viewer_id', 'uid'];
             for (const param of idPriorityList) {
                 const value = urlParams.get(param);
-                if (value && value !== 'undefined') {
+                if (value && value !== 'undefined' && value !== '0') {
                     okId = value;
                     console.log(`✅ Найден ID пользователя: ${okId} (из параметра: ${param})`);
                     break;
                 }
             }
 
-            // 2. Пытаемся получить полное имя
-            const nameParam = urlParams.get('user_name') || urlParams.get('full_name');
-            if (nameParam) {
-                const nameParts = decodeURIComponent(nameParam).split(' ');
-                firstName = nameParts[0] || 'Пользователь';
-                lastName = nameParts.slice(1).join(' ') || 'OK';
-                console.log(`✅ Получено имя: ${firstName} ${lastName}`);
+            // 2. Пытаемся получить отдельно имя и фамилию
+            const firstNameParam = urlParams.get('first_name');
+            const lastNameParam = urlParams.get('last_name');
+            
+            if (firstNameParam && lastNameParam) {
+                // Если переданы отдельные параметры имени и фамилии
+                firstName = decodeURIComponent(firstNameParam);
+                lastName = decodeURIComponent(lastNameParam);
+                console.log(`✅ Получено имя отдельно: ${firstName} ${lastName}`);
+            } else {
+                // Пытаемся получить полное имя и разбить его
+                const nameParam = urlParams.get('user_name') || urlParams.get('full_name') || urlParams.get('name');
+                if (nameParam) {
+                    const nameParts = decodeURIComponent(nameParam).split(' ');
+                    firstName = nameParts[0] || '';
+                    lastName = nameParts.slice(1).join(' ') || '';
+                    
+                    // Если имя состоит из одного слова, используем его как имя
+                    if (nameParts.length === 1) {
+                        firstName = nameParts[0];
+                        lastName = '';
+                    }
+                    console.log(`✅ Получено имя из строки: ${firstName} ${lastName}`);
+                }
             }
 
             // 3. Пытаемся получить аватарку ОК (обрабатываем специфичный формат)
-            const avatarParam = urlParams.get('user_image') || urlParams.get('photo_200');
+            const avatarParam = urlParams.get('user_image') || urlParams.get('photo_200') || urlParams.get('photo');
             if (avatarParam) {
                 avatarUrl = decodeURIComponent(avatarParam);
                 // Исправляем URL аватарки Одноклассников для лучшего качества
@@ -856,7 +873,7 @@
             }
 
             // 4. Пытаемся получить местоположение из профиля OK
-            const locationParam = urlParams.get('ip_geo_location') || urlParams.get('location');
+            const locationParam = urlParams.get('ip_geo_location') || urlParams.get('location') || urlParams.get('city');
             if (locationParam) {
                 const locParts = decodeURIComponent(locationParam).split(',');
                 // Формат часто "RU,Москва,Москва" - берем второй элемент
@@ -864,32 +881,41 @@
                 console.log(`✅ Получено местоположение: ${location}`);
             }
 
-            // 5. Если данных нет (демо-режим или запуск вне OK)
-            if (!okId || okId === 'undefined') {
-                okId = 'demo_' + Math.random().toString(36).substr(2, 9);
+            // 5. Проверяем, достаточно ли данных получено
+            const hasEnoughData = okId && firstName && (firstName !== 'Пользователь');
+            
+            if (!hasEnoughData) {
+                // Недостаточно данных - запускаем демо-режим
+                okId = okId || 'demo_' + Math.random().toString(36).substr(2, 9);
                 console.log('⚠️ Запуск в демо-режиме. ID:', okId);
                 
-                // Генерируем случайные демо-данные
-                const demoNames = [
-                    {first: 'Алексей', last: 'Иванов', city: 'Москва'},
-                    {first: 'Мария', last: 'Петрова', city: 'Санкт-Петербург'},
-                    {first: 'Дмитрий', last: 'Сидоров', city: 'Новосибирск'},
-                    {first: 'Екатерина', last: 'Кузнецова', city: 'Екатеринбург'},
-                    {first: 'Анна', last: 'Смирнова', city: 'Казань'}
-                ];
-                const randomDemo = demoNames[Math.floor(Math.random() * demoNames.length)];
-                firstName = randomDemo.first;
-                lastName = randomDemo.last;
-                location = randomDemo.city;
+                if (!firstName || firstName === 'Пользователь') {
+                    const demoNames = [
+                        {first: 'Алексей', last: 'Иванов', city: 'Москва'},
+                        {first: 'Мария', last: 'Петрова', city: 'Санкт-Петербург'},
+                        {first: 'Дмитрий', last: 'Сидоров', city: 'Новосибирск'},
+                        {first: 'Екатерина', last: 'Кузнецова', city: 'Екатеринбург'},
+                        {first: 'Анна', last: 'Смирнова', city: 'Казань'}
+                    ];
+                    const randomDemo = demoNames[Math.floor(Math.random() * demoNames.length)];
+                    firstName = firstName || randomDemo.first;
+                    lastName = lastName || randomDemo.last;
+                    location = location || randomDemo.city;
+                }
                 
                 showNotification('⚠️ Запущен демо-режим. Для реальных данных запустите приложение через OK.ru', 'warning');
+            } else {
+                console.log('✅ Запуск с реальными данными из OK.ru');
             }
 
+            // Создаем полное имя
+            const fullName = `${firstName} ${lastName}`.trim();
+            
             return {
                 ok_id: okId,
                 first_name: firstName,
                 last_name: lastName,
-                full_name: `${firstName} ${lastName}`,
+                full_name: fullName || 'Гость OK',
                 avatar_url: avatarUrl,
                 location: location,
                 is_online: true
@@ -1075,17 +1101,22 @@
                 return;
             }
             
-            container.innerHTML = people.map(person => `
-                <div class="person-card" onclick="startChat('${person.ok_id}', '${person.first_name} ${person.last_name}', '${person.avatar_url || ''}')">
+            container.innerHTML = people.map(person => {
+                const fullName = `${person.first_name} ${person.last_name}`.trim();
+                const avatarUrl = person.avatar_url || 
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=4A90E2&color=fff&size=50`;
+                
+                return `
+                <div class="person-card" onclick="startChat('${person.ok_id}', '${fullName}', '${person.avatar_url || ''}')">
                     <div class="person-header">
                         <div style="position: relative;">
-                            <img src="${person.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(person.first_name + ' ' + person.last_name)}&background=4A90E2&color=fff`}" 
+                            <img src="${avatarUrl}" 
                                  alt="${person.first_name}" 
                                  class="person-avatar">
                             ${person.is_online ? '<div class="online-indicator"></div>' : ''}
                         </div>
                         <div class="person-info">
-                            <h4>${person.first_name} ${person.last_name}</h4>
+                            <h4>${fullName}</h4>
                             <div class="person-location">
                                 📍 ${person.location || 'Не указано'}
                             </div>
@@ -1098,7 +1129,8 @@
                         💬 Написать
                     </button>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
         
         // ========== ОКЕАН ПОСЛАНИЙ ==========
