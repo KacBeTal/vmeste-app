@@ -1,26 +1,31 @@
+<!-- index.html для OK.ru -->
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Тест для OK.ru</title>
-    <!-- Убираем ВСЕ meta CSP теги! -->
-</head>
-<body style="padding: 20px; font-family: Arial;">
-    <h1>Тестовая страница для OK.ru</h1>
-    <p>Если вы видите этот текст в iframe OK.ru — успех!</p>
-    <p>URL: <span id="url"></span></p>
-    <p>В iframe: <span id="iframe"></span></p>
-    
     <script>
-        document.getElementById('url').textContent = window.location.href;
-        document.getElementById('iframe').textContent = 
-            window.self !== window.top ? 'ДА' : 'НЕТ';
-            
-        // Проверяем доступ к OK API
-        if (typeof FAPI !== 'undefined') {
-            console.log('OK API доступен');
-            document.body.innerHTML += '<p>✅ OK API доступен</p>';
+        // Проверяем, открыты ли мы в iframe OK.ru
+        if (window.self !== window.top) {
+            // Мы в iframe - пытаемся выйти
+            try {
+                // Пробуем перенаправить родительское окно
+                window.top.location.href = 'https://vmeste-app.vercel.app/ok-version.html';
+            } catch (e) {
+                // Не можем перенаправить родителя - показываем сообщение
+                document.write(`
+                    <h1>ВМесте для OK.ru</h1>
+                    <p>Пожалуйста, откройте приложение в новой вкладке:</p>
+                    <a href="https://vmeste-app.vercel.app/ok-version.html" target="_blank">
+                        Открыть ВМесте
+                    </a>
+                `);
+            }
+        } else {
+            // Мы уже вне iframe - загружаем приложение
+            window.location.href = 'https://vmeste-app.vercel.app/ok-version.html';
         }
     </script>
+</head>
+<body>
+    <p>Загрузка...</p>
 </body>
 </html>
