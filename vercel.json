@@ -4,12 +4,8 @@
       "source": "/(.*)",
       "headers": [
         {
-          "key": "X-Frame-Options",
-          "value": "ALLOW-FROM https://ok.ru"
-        },
-        {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors https://ok.ru https://*.ok.ru;"
+          "value": "default-src 'self' https:; frame-ancestors https://ok.ru https://*.ok.ru https://vk.com https://*.vk.com;"
         }
       ]
     }
