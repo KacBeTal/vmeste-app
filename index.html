@@ -1,88 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ВМесте для OK.ru</title>
-    
-    <!-- Разрешаем iframe -->
-
-    
-    <!-- SDK OK.ru -->
-    <script type="text/javascript" src="//api.ok.ru/js/fapi5.js" defer="defer"></script>
-    
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            min-height: 100vh;
-        }
-        .container {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .status {
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            background: rgba(255,255,255,0.2);
-        }
-    </style>
+    <title>Тест: Мое приложение во iframe</title>
 </head>
 <body>
-    <div class="container">
-        <h1>🌊 ВМесте</h1>
-        <p>Тестовое приложение для OK.ru</p>
-        
-        <div id="status" class="status">
-            <p>Проверка подключения...</p>
-            <p>Домен: <span id="domain"></span></p>
-            <p>В iframe: <span id="iframe-status"></span></p>
-        </div>
-        
-        <div id="content"></div>
-    </div>
-
-    <script>
-        // Показываем информацию
-        document.getElementById('domain').textContent = window.location.hostname;
-        document.getElementById('iframe-status').textContent = 
-            (window.self !== window.top) ? '✅ Да' : '❌ Нет';
-        
-        // Проверяем OK.ru SDK
-        setTimeout(() => {
-            if (typeof FAPI !== 'undefined') {
-                document.getElementById('status').innerHTML += 
-                    '<p>✅ SDK OK.ru загружен</p>';
-                
-                // Пробуем получить параметры
-                var rParams = FAPI.Util.getRequestParameters();
-                if (rParams && rParams.api_server) {
-                    document.getElementById('content').innerHTML = 
-                        '<h3>✅ OK.ru iframe работает!</h3>' +
-                        '<p>API сервер: ' + rParams.api_server + '</p>' +
-                        '<button onclick="testOKAuth()">Тест авторизации</button>';
-                }
-            } else {
-                document.getElementById('status').innerHTML += 
-                    '<p style="color:#ff6b6b">❌ SDK OK.ru не загружен</p>';
-            }
-        }, 2000);
-        
-        function testOKAuth() {
-            alert('OK API тест работает!');
-        }
-    </script>
+    <h1>Проверка iframe</h1>
+    <p>Если ниже видно "ВМесте", значит OK.ru сможет встроить ваше приложение:</p>
+    
+    <iframe 
+        src="https://sparkling-platypus-1bb65e.netlify.app" 
+        width="800" 
+        height="600"
+        style="border: 2px solid #ccc;">
+    </iframe>
+    
+    <p>Если iframe пустой или показывает ошибку — проблема в настройках Netlify (CSP).</p>
 </body>
 </html>
