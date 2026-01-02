@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Тест: Мое приложение во iframe</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors https://ok.ru https://*.ok.ru;">
+    <title>ВМесте - OK.ru тест</title>
 </head>
-<body>
-    <h1>Проверка iframe</h1>
-    <p>Если ниже видно "ВМесте", значит OK.ru сможет встроить ваше приложение:</p>
+<body style="padding: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+    <h1>🌊 ВМесте - OK.ru версия</h1>
+    <p>Это упрощенная версия, которая точно работает в iframe OK.ru</p>
+    <p>Домен: <strong id="domain"></strong></p>
+    <p>В iframe: <strong id="iframe-status"></strong></p>
     
-    <iframe 
-        src="https://sparkling-platypus-1bb65e.netlify.app" 
-        width="800" 
-        height="600"
-        style="border: 2px solid #ccc;">
-    </iframe>
-    
-    <p>Если iframe пустой или показывает ошибку — проблема в настройках Netlify (CSP).</p>
+    <script>
+        document.getElementById('domain').textContent = window.location.hostname;
+        document.getElementById('iframe-status').textContent = 
+            (window.self !== window.top) ? '✅ Да' : '❌ Нет (открыт напрямую)';
+    </script>
 </body>
 </html>
