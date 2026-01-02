@@ -1,31 +1,140 @@
-<!-- index.html для OK.ru -->
 <!DOCTYPE html>
 <html>
 <head>
-    <script>
-        // Проверяем, открыты ли мы в iframe OK.ru
-        if (window.self !== window.top) {
-            // Мы в iframe - пытаемся выйти
-            try {
-                // Пробуем перенаправить родительское окно
-                window.top.location.href = 'https://vmeste-app.vercel.app/ok-version.html';
-            } catch (e) {
-                // Не можем перенаправить родителя - показываем сообщение
-                document.write(`
-                    <h1>ВМесте для OK.ru</h1>
-                    <p>Пожалуйста, откройте приложение в новой вкладке:</p>
-                    <a href="https://vmeste-app.vercel.app/ok-version.html" target="_blank">
-                        Открыть ВМесте
-                    </a>
-                `);
-            }
-        } else {
-            // Мы уже вне iframe - загружаем приложение
-            window.location.href = 'https://vmeste-app.vercel.app/ok-version.html';
+    <meta charset="UTF-8">
+    <title>ВМесте для OK.ru</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ee8c3a, #f5c271);
+            color: #333;
+            min-height: 100vh;
         }
-    </script>
+        .ok-button {
+            background: #ee8c3a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            width: 100%;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
-    <p>Загрузка...</p>
+    <div class="container">
+        <h1>🌊 ВМесте для OK.ru</h1>
+        
+        <div id="user-info" style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; margin: 20px 0;">
+            <p>👤 Идет загрузка данных пользователя...</p>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h3>✉️ Отправить послание:</h3>
+            <textarea id="message" placeholder="Напишите ваше сообщение..." 
+                     style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+            <button class="ok-button" onclick="sendMessage()">🌊 Отправить в океан</button>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h3>🎣 Поймать послание:</h3>
+            <button class="ok-button" onclick="catchMessage()">🎣 Выловить случайное послание</button>
+            <div id="random-message" style="margin-top: 15px; min-height: 50px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        console.log('🚀 ВМесте загружен в OK.ru');
+        console.log('URL параметры:', window.location.search);
+        
+        // Проверяем, в iframe ли мы
+        const isInIframe = window.self !== window.top;
+        console.log('В iframe:', isInIframe ? '✅ Да' : '❌ Нет');
+        
+        // ========== РАБОТА С OK.RU API ==========
+        function initOK() {
+            if (typeof FAPI !== 'undefined') {
+                console.log('✅ OK API доступен');
+                
+                // Получаем данные пользователя
+                FAPI.Client.call({
+                    method: "users.getCurrentUser",
+                    fields: "uid,first_name,last_name,pic_1"
+                }, function(method, result) {
+                    if (result) {
+                        console.log('👤 Пользователь:', result);
+                        document.getElementById('user-info').innerHTML = `
+                            <p>👋 Привет, <strong>${result.first_name} ${result.last_name}</strong>!</p>
+                            <p>ID: ${result.uid}</p>
+                            ${result.pic_1 ? `<img src="${result.pic_1}" style="width: 50px; height: 50px; border-radius: 50%;">` : ''}
+                        `;
+                    }
+                });
+            } else {
+                console.log('⚠️ OK API не доступен, режим разработки');
+                document.getElementById('user-info').innerHTML = `
+                    <p>👋 Привет, тестовый пользователь!</p>
+                    <p><small>Для реальных данных откройте в OK.ru</small></p>
+                `;
+            }
+        }
+        
+        // ========== ФУНКЦИИ ПРИЛОЖЕНИЯ ==========
+        function sendMessage() {
+            const message = document.getElementById('message').value.trim();
+            if (!message) {
+                alert('Введите текст сообщения');
+                return;
+            }
+            
+            alert('✅ Послание отправлено в океан!\n"' + message.substring(0, 50) + '"');
+            document.getElementById('message').value = '';
+            
+            // Здесь будет отправка в Supabase
+            console.log('Сообщение для отправки:', message);
+        }
+        
+        function catchMessage() {
+            const messages = [
+                "Кто ищет, тот всегда найдёт что-то интересное 🌊",
+                "Иногда тишина говорит громче слов 🤫",
+                "Сегодня прекрасный день, чтобы улыбнуться незнакомцу 😊",
+                "В каждом из нас есть частичка океана 🌌",
+                "Самые важные вещи часто не видны на поверхности 🐚"
+            ];
+            
+            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+            
+            document.getElementById('random-message').innerHTML = `
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #ee8c3a;">
+                    <p style="font-size: 16px; margin: 0;">"${randomMsg}"</p>
+                    <small style="color: #666;">🎣 Выловлено из океана в ${new Date().toLocaleTimeString()}</small>
+                </div>
+            `;
+        }
+        
+        // ========== ЗАПУСК ==========
+        // Ждем немного перед инициализацией
+        setTimeout(initOK, 1000);
+        
+        // Добавляем кнопку для отладки (только в разработке)
+        if (!isInIframe || typeof FAPI === 'undefined') {
+            document.body.innerHTML += `
+                <div style="position: fixed; bottom: 10px; right: 10px; background: #333; color: white; padding: 10px; border-radius: 5px; font-size: 12px;">
+                    <p>Режим: ${isInIframe ? 'iframe' : 'прямой'}</p>
+                    <p>OK API: ${typeof FAPI !== 'undefined' ? '✅' : '❌'}</p>
+                </div>
+            `;
+        }
+    </script>
 </body>
 </html>
