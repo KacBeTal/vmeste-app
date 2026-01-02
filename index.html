@@ -340,6 +340,27 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
+        /* Debug Panel */
+        .debug-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 9999;
+            max-width: 300px;
+            border: 1px solid #ff6b8b;
+        }
+        
+        .debug-title {
+            color: #ff6b8b;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
         /* Waves Animation */
         .waves {
             position: fixed;
@@ -521,7 +542,8 @@
             avatar_url: '',
             location: '',
             city: '',
-            supabase_id: null
+            supabase_id: null,
+            is_ok_user: false
         };
         
         // ========== УТИЛИТЫ ==========
@@ -557,79 +579,150 @@
             return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName + ' ' + lastName)}&background=4A90E2&color=fff&size=70`;
         }
         
+        // ========== ОТЛАДОЧНЫЙ ВЫВОД ==========
+        function showDebugInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const params = {};
+            
+            for (const [key, value] of urlParams.entries()) {
+                params[key] = value;
+            }
+            
+            // Проверяем OK.ru признаки
+            const isOK = params['vk_client'] === 'ok' || 
+                        params['vk_ok_user_id'] || 
+                        params['vk_ref'] === 'app_mini_app';
+            
+            const isAppUser = params['vk_is_app_user'] === '1';
+            const hasSign = params['sign'];
+            
+            // Создаем панель отладки
+            const debugDiv = document.createElement('div');
+            debugDiv.className = 'debug-panel';
+            debugDiv.innerHTML = `
+                <div class="debug-title">Отладка OK.ru</div>
+                <div>В OK.ru: <strong>${isOK ? 'ДА ✓' : 'НЕТ ✗'}</strong></div>
+                <div>Авторизован: <strong>${isAppUser ? 'ДА ✓' : 'НЕТ ✗'}</strong></div>
+                <div>Подпись: <strong>${hasSign ? 'ЕСТЬ ✓' : 'НЕТ ✗'}</strong></div>
+                <div>ID: <strong>${params['vk_user_id'] || params['vk_ok_user_id'] || 'нет'}</strong></div>
+                <div>Viewer ID: <strong>${params['viewer_id'] || 'нет'}</strong></div>
+                <div style="margin-top: 5px; font-size: 10px; opacity: 0.7;">
+                    Параметров: ${Object.keys(params).length}
+                </div>
+            `;
+            
+            document.body.appendChild(debugDiv);
+            
+            // Удалить через 15 секунд
+            setTimeout(() => {
+                if (debugDiv.parentNode) {
+                    debugDiv.style.opacity = '0';
+                    debugDiv.style.transition = 'opacity 0.5s';
+                    setTimeout(() => {
+                        if (debugDiv.parentNode) debugDiv.remove();
+                    }, 500);
+                }
+            }, 15000);
+            
+            // Выводим в консоль для подробной отладки
+            console.log('🔍 ДЕТАЛЬНЫЕ ПАРАМЕТРЫ URL:');
+            console.table(params);
+            
+            return {
+                isOK,
+                isAppUser,
+                hasSign,
+                params
+            };
+        }
+        
         // ========== ПОЛУЧЕНИЕ ДАННЫХ ИЗ OK.RU ==========
         function parseUserDataFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
-            console.log('📋 Все параметры URL:', Object.fromEntries(urlParams.entries()));
+            const params = {};
             
-            let okId = null, firstName = '', lastName = '', avatarUrl = '', location = '', city = '';
+            for (const [key, value] of urlParams.entries()) {
+                params[key] = value;
+            }
             
-            // 1. Пытаемся получить ID пользователя OK
-            const idParams = ['vk_ok_user_id', 'logged_user_id', 'vk_user_id', 'uid', 'viewer_id'];
-            for (const param of idParams) {
-                const value = urlParams.get(param);
-                if (value && value !== 'undefined' && value !== '0') {
-                    okId = value;
-                    console.log(`✅ Найден ID: ${okId} (параметр: ${param})`);
-                    break;
+            console.log('🎯 Анализ параметров OK.ru:');
+            
+            // Определяем, запущено ли через OK.ru
+            const isOK = params['vk_client'] === 'ok' || 
+                        params['vk_ok_user_id'] || 
+                        params['vk_ref'] === 'app_mini_app';
+            
+            const isAppUser = params['vk_is_app_user'] === '1';
+            
+            // Основные ID пользователя
+            let okId = params['vk_ok_user_id'] || 
+                      params['vk_user_id'] || 
+                      params['viewer_id'] || 
+                      params['uid'];
+            
+            // Если это OK.ru, но нет стандартного ID, используем viewer_id
+            if (isOK && !okId && params['viewer_id']) {
+                okId = 'ok_' + params['viewer_id'];
+            }
+            
+            // Получаем имя пользователя
+            let firstName = '';
+            let lastName = '';
+            
+            // Пробуем разные варианты получения имени
+            if (params['first_name'] && params['last_name']) {
+                // Если есть отдельные параметры имени и фамилии
+                firstName = decodeURIComponent(params['first_name']);
+                lastName = decodeURIComponent(params['last_name']);
+            } else if (params['user_name']) {
+                // Если есть полное имя
+                const fullName = decodeURIComponent(params['user_name']).trim();
+                const nameParts = fullName.split(' ');
+                firstName = nameParts[0] || '';
+                if (nameParts.length > 1) {
+                    lastName = nameParts.slice(1).join(' ');
+                }
+            } else if (params['full_name']) {
+                // Альтернативный параметр полного имени
+                const fullName = decodeURIComponent(params['full_name']).trim();
+                const nameParts = fullName.split(' ');
+                firstName = nameParts[0] || '';
+                if (nameParts.length > 1) {
+                    lastName = nameParts.slice(1).join(' ');
                 }
             }
             
-            // 2. Пытаемся получить отдельные параметры имени
-            const firstNameParam = urlParams.get('first_name');
-            const lastNameParam = urlParams.get('last_name');
+            // Получаем аватарку
+            let avatarUrl = '';
+            const avatarParams = ['photo_200', 'photo_100', 'photo_50', 'user_image', 'photo'];
             
-            if (firstNameParam && lastNameParam) {
-                // Если переданы отдельно имя и фамилия
-                firstName = decodeURIComponent(firstNameParam);
-                lastName = decodeURIComponent(lastNameParam);
-                console.log(`✅ Имя отдельно: ${firstName} ${lastName}`);
-            } else {
-                // Пытаемся получить полное имя
-                const nameParam = urlParams.get('user_name') || urlParams.get('full_name') || urlParams.get('name');
-                if (nameParam) {
-                    const nameParts = decodeURIComponent(nameParam).trim().split(' ');
-                    firstName = nameParts[0] || '';
-                    
-                    if (nameParts.length > 1) {
-                        lastName = nameParts.slice(1).join(' ');
-                    }
-                    
-                    // Если имя состоит из одного слова - используем как имя
-                    if (nameParts.length === 1) {
-                        firstName = nameParts[0];
-                        lastName = '';
-                    }
-                    
-                    console.log(`✅ Имя из строки: ${firstName} ${lastName}`);
-                }
-            }
-            
-            // 3. Пытаемся получить аватарку ОК
-            const avatarParams = ['user_image', 'photo_200', 'photo_100', 'photo_50', 'photo'];
             for (const param of avatarParams) {
-                const value = urlParams.get(param);
-                if (value) {
-                    avatarUrl = decodeURIComponent(value);
+                if (params[param]) {
+                    avatarUrl = decodeURIComponent(params[param]);
                     
-                    // Исправляем URL аватарки Одноклассников
+                    // Исправляем URL аватарки OK.ru
                     if (avatarUrl.includes('i.okcdn.ru')) {
                         avatarUrl = avatarUrl.replace(/(?:&|\?)size=\w+/, '') + '&size=200';
                     }
-                    
-                    console.log(`✅ Аватар: ${avatarUrl} (параметр: ${param})`);
                     break;
                 }
             }
             
-            // 4. Пытаемся получить местоположение
-            const locationParams = ['ip_geo_location', 'location', 'city', 'geo_location'];
+            // Если нет аватарки, но есть ID, генерируем URL аватарки OK
+            if (!avatarUrl && okId && isOK) {
+                avatarUrl = `https://i.okcdn.ru/?cmd=PhotoFriend&pid=${okId}&fid=${okId}&size=200`;
+            }
+            
+            // Получаем местоположение
+            let location = '';
+            let city = '';
+            
+            const locationParams = ['city', 'location', 'ip_geo_location', 'geo_location'];
             for (const param of locationParams) {
-                const value = urlParams.get(param);
-                if (value) {
-                    const locStr = decodeURIComponent(value);
+                if (params[param]) {
+                    const locStr = decodeURIComponent(params[param]);
                     
-                    // Формат часто "RU,Москва,Москва" или просто "Москва"
+                    // Формат часто "RU,Москва,Москва"
                     if (locStr.includes(',')) {
                         const parts = locStr.split(',');
                         location = parts[1] || parts[0] || '';
@@ -638,32 +731,79 @@
                         location = locStr;
                         city = locStr;
                     }
-                    
-                    console.log(`✅ Местоположение: ${location} (параметр: ${param})`);
                     break;
                 }
             }
             
-            // 5. VK ID (для совместимости)
-            const vkId = urlParams.get('vk_user_id') || okId;
+            // Если имя не найдено, но пользователь в OK.ru
+            if (!firstName && isOK && isAppUser) {
+                firstName = 'Пользователь';
+                lastName = 'OK';
+            }
             
-            return {
+            const result = {
                 ok_id: okId,
-                vk_id: vkId,
+                vk_id: okId, // Для совместимости
                 first_name: firstName || 'Гость',
                 last_name: lastName || '',
                 avatar_url: avatarUrl,
                 location: location,
                 city: city,
-                has_real_data: !!(okId && firstName && firstName !== 'Гость')
+                is_ok_user: isOK,
+                is_app_user: isAppUser,
+                has_real_data: !!(okId && isOK && isAppUser)
             };
+            
+            console.log('📊 Результат парсинга:');
+            console.log('- ID:', result.ok_id);
+            console.log('- Имя:', result.first_name, result.last_name);
+            console.log('- OK.ru пользователь:', result.is_ok_user);
+            console.log('- Авторизован:', result.is_app_user);
+            console.log('- Реальные данные:', result.has_real_data);
+            
+            return result;
         }
         
-        // ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ПОЛЬЗОВАТЕЛЯ ==========
+        // ========== ИНИЦИАЛИЗАЦИЯ VK BRIDGE ==========
+        async function initVKBridge() {
+            try {
+                // Проверяем доступность VK Bridge
+                if (typeof vkBridge === 'undefined') {
+                    console.warn('VK Bridge не загружен');
+                    return null;
+                }
+                
+                // Инициализируем
+                await vkBridge.send('VKWebAppInit');
+                console.log('✅ VK Bridge инициализирован');
+                
+                // Пробуем получить данные пользователя
+                try {
+                    const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
+                    console.log('✅ Данные из VK Bridge:', userInfo);
+                    
+                    return {
+                        first_name: userInfo.first_name || '',
+                        last_name: userInfo.last_name || '',
+                        photo_200: userInfo.photo_200 || userInfo.photo_100 || userInfo.photo_50 || '',
+                        id: userInfo.id || ''
+                    };
+                } catch (error) {
+                    console.log('Не удалось получить UserInfo:', error);
+                    return null;
+                }
+                
+            } catch (error) {
+                console.error('Ошибка VK Bridge:', error);
+                return null;
+            }
+        }
+        
+        // ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ==========
         function updateUserInterface(userData) {
             // Обновляем имя
             const fullName = `${userData.first_name} ${userData.last_name}`.trim();
-            document.getElementById('user-name').textContent = fullName;
+            document.getElementById('user-name').textContent = fullName || 'Гость';
             
             // Обновляем аватар
             const avatarImg = document.getElementById('user-avatar');
@@ -684,19 +824,6 @@
                 document.getElementById('user-location').innerHTML = '📍 Не указано';
             }
             
-            // Обновляем статус подключения
-            if (userData.has_real_data) {
-                document.getElementById('connection-status').innerHTML = `
-                    <div class="status-dot" style="background: #50E3C2"></div>
-                    <span>Подключено к OK.ru</span>
-                `;
-            } else {
-                document.getElementById('connection-status').innerHTML = `
-                    <div class="status-dot" style="background: #FFA500"></div>
-                    <span>Демо-режим</span>
-                `;
-            }
-            
             // Сохраняем данные в глобальную переменную
             currentUser = {
                 ...currentUser,
@@ -709,122 +836,73 @@
         
         // ========== СОХРАНЕНИЕ В БАЗУ ДАННЫХ ==========
         async function saveUserToDatabase(userData) {
-    if (!supabaseClient) {
-        console.warn('Supabase не инициализирован');
-        return null;
-    }
-    
-    try {
-        // Используем только поля, которые точно есть в таблице
-        const profileData = {
-            ok_id: userData.ok_id,
-            vk_id: userData.vk_id,
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            full_name: `${userData.first_name} ${userData.last_name}`.trim(),
-            avatar_url: userData.avatar_url,
-            location: userData.location || userData.city,
-            is_online: true,
-            last_seen: new Date().toISOString(),
-            created_at: new Date().toISOString()
-        };
-        
-        // Убираем поля, которые могут отсутствовать в таблице
-        delete profileData.city; // Если колонка city не создана
-        
-        const { data, error } = await supabaseClient
-            .from('profiles')
-            .upsert(profileData, {
-                onConflict: 'ok_id'
-            })
-            .select()
-            .single();
-            
-        if (error) {
-            console.error('❌ Ошибка сохранения профиля:', error);
-            
-            // Пробуем вставить без конфликта
-            const { data: newData, error: insertError } = await supabaseClient
-                .from('profiles')
-                .insert(profileData)
-                .select()
-                .single();
-                
-            if (insertError) {
-                console.error('❌ Ошибка при вставке:', insertError);
+            if (!supabaseClient) {
+                console.warn('Supabase не инициализирован');
                 return null;
             }
             
-            console.log('✅ Профиль создан (вставка):', newData);
-            currentUser.supabase_id = newData.id;
-            return newData;
-        }
-        
-        console.log('✅ Профиль сохранен (обновлен):', data);
-        currentUser.supabase_id = data.id;
-        return data;
-        
-    } catch (error) {
-        console.error('Ошибка при сохранении:', error);
-        return null;
-    }
-}
-        
-        // ========== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ==========
-        async function initApp() {
-            updateLoadingStatus('Инициализация приложения...');
+            // Если это демо-пользователь, не сохраняем
+            if (!userData.ok_id || !userData.has_real_data) {
+                console.log('⚠️ Демо-пользователь, не сохраняем в БД');
+                return null;
+            }
             
             try {
-                // 1. Инициализируем Supabase
-                if (typeof supabase === 'undefined') {
-                    throw new Error('Supabase SDK не загружен');
+                const profileData = {
+                    ok_id: userData.ok_id,
+                    vk_id: userData.vk_id,
+                    first_name: userData.first_name,
+                    last_name: userData.last_name,
+                    full_name: `${userData.first_name} ${userData.last_name}`.trim(),
+                    avatar_url: userData.avatar_url,
+                    location: userData.location || userData.city,
+                    is_online: true,
+                    last_seen: new Date().toISOString()
+                };
+                
+                console.log('💾 Сохраняем профиль:', profileData);
+                
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .upsert(profileData, {
+                        onConflict: 'ok_id'
+                    })
+                    .select()
+                    .single();
+                    
+                if (error) {
+                    console.error('❌ Ошибка сохранения профиля:', error);
+                    
+                    // Пробуем просто вставить (без upsert)
+                    const { data: newData, error: insertError } = await supabaseClient
+                        .from('profiles')
+                        .insert(profileData)
+                        .select()
+                        .single();
+                        
+                    if (insertError) {
+                        console.error('❌ Ошибка при вставке:', insertError);
+                        
+                        // Показываем пользователю ошибку структуры БД
+                        if (insertError.message.includes('column') && insertError.message.includes('does not exist')) {
+                            showNotification('Ошибка структуры базы данных. Проверьте таблицу profiles.', 'error');
+                        }
+                        
+                        return null;
+                    }
+                    
+                    console.log('✅ Профиль создан (вставка):', newData);
+                    currentUser.supabase_id = newData.id;
+                    return newData;
                 }
                 
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log('✅ Supabase подключен');
-                
-                // 2. Получаем данные пользователя из OK.ru
-                updateLoadingStatus('Получение данных пользователя...');
-                const userData = parseUserDataFromURL();
-                
-                if (!userData.ok_id || !userData.first_name || userData.first_name === 'Гость') {
-                    console.log('⚠️ Недостаточно данных из OK, используем демо-режим');
-                    await startDemoMode();
-                } else {
-                    console.log('✅ Получены реальные данные из OK');
-                    
-                    // Обновляем интерфейс
-                    updateUserInterface(userData);
-                    
-                    // Сохраняем в базу данных
-                    updateLoadingStatus('Сохранение профиля...');
-                    await saveUserToDatabase(userData);
-                    
-                    showNotification(`Добро пожаловать, ${userData.first_name}!`, 'success');
-                }
-                
-                // 3. Загружаем статистику пользователя
-                updateLoadingStatus('Загрузка статистики...');
-                await loadUserStats();
-                
-                // 4. Загружаем сообщения из океана
-                await loadOceanMessages();
-                
-                // 5. Показываем приложение
-                showApp();
-                updateLoadingStatus('Готово!');
+                console.log('✅ Профиль сохранен (обновлен):', data);
+                currentUser.supabase_id = data.id;
+                return data;
                 
             } catch (error) {
-                console.error('❌ Критическая ошибка инициализации:', error);
-                updateLoadingStatus('Ошибка: ' + error.message);
-                
-                // Запускаем демо-режим в случае ошибки
-                setTimeout(async () => {
-                    await startDemoMode();
-                    await loadUserStats();
-                    showApp();
-                    showNotification('Запущен в демо-режиме', 'warning');
-                }, 1500);
+                console.error('Ошибка при сохранении:', error);
+                return null;
             }
         }
         
@@ -832,7 +910,6 @@
         async function startDemoMode() {
             console.log('🚀 Запуск демо-режима');
             
-            // Создаем демо-пользователя
             const demoNames = [
                 {first: 'Алексей', last: 'Иванов', city: 'Москва'},
                 {first: 'Мария', last: 'Петрова', city: 'Санкт-Петербург'},
@@ -851,27 +928,19 @@
                 avatar_url: '',
                 location: randomDemo.city,
                 city: randomDemo.city,
+                is_ok_user: false,
+                is_app_user: false,
                 has_real_data: false
             };
             
             updateUserInterface(demoUser);
-            
-            // Сохраняем в базу (если Supabase доступен)
-            if (supabaseClient) {
-                try {
-                    await saveUserToDatabase(demoUser);
-                } catch (error) {
-                    console.log('⚠️ Не удалось сохранить демо-пользователя в базу');
-                }
-            }
-            
             return demoUser;
         }
         
         // ========== ЗАГРУЗКА СТАТИСТИКИ ==========
         async function loadUserStats() {
-            if (!currentUser.ok_id || !supabaseClient) {
-                // Устанавливаем демо-статистику
+            // Если демо-режим или нет пользователя
+            if (!currentUser.ok_id || !currentUser.has_real_data || !supabaseClient) {
                 document.getElementById('sent-count').textContent = '5';
                 document.getElementById('caught-count').textContent = '3';
                 document.getElementById('likes-count').textContent = '12';
@@ -904,7 +973,149 @@
             }
         }
         
-        // ========== РАБОТА С ОКЕАНОМ ПОСЛАНИЙ ==========
+        // ========== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ==========
+        async function initApp() {
+            updateLoadingStatus('Инициализация приложения...');
+            
+            try {
+                // 1. Показываем отладочную информацию
+                const debugInfo = showDebugInfo();
+                
+                // 2. Инициализируем Supabase
+                if (typeof supabase === 'undefined') {
+                    throw new Error('Supabase SDK не загружен');
+                }
+                
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('✅ Supabase подключен');
+                
+                // 3. Парсим данные из URL
+                updateLoadingStatus('Получение данных пользователя...');
+                let userData = parseUserDataFromURL();
+                
+                // 4. Пробуем получить данные через VK Bridge
+                let bridgeData = null;
+                if (userData.is_ok_user && userData.is_app_user) {
+                    try {
+                        bridgeData = await initVKBridge();
+                        if (bridgeData) {
+                            console.log('✅ Получены данные из VK Bridge');
+                            
+                            // Обновляем данные пользователя из Bridge
+                            userData.first_name = bridgeData.first_name || userData.first_name;
+                            userData.last_name = bridgeData.last_name || userData.last_name;
+                            userData.avatar_url = bridgeData.photo_200 || userData.avatar_url;
+                            
+                            if (bridgeData.id && !userData.ok_id) {
+                                userData.ok_id = bridgeData.id;
+                                userData.vk_id = bridgeData.id;
+                            }
+                            
+                            userData.has_real_data = true;
+                        }
+                    } catch (error) {
+                        console.log('VK Bridge недоступен:', error);
+                    }
+                }
+                
+                // 5. Проверяем, достаточно ли данных
+                const hasEnoughData = userData.ok_id && 
+                                     userData.is_ok_user && 
+                                     userData.is_app_user && 
+                                     userData.first_name && 
+                                     userData.first_name !== 'Гость';
+                
+                console.log('📊 Проверка данных:', {
+                    hasId: !!userData.ok_id,
+                    isOK: userData.is_ok_user,
+                    isAppUser: userData.is_app_user,
+                    hasFirstName: !!userData.first_name,
+                    firstName: userData.first_name,
+                    enoughData: hasEnoughData
+                });
+                
+                // 6. Обработка разных сценариев
+                if (hasEnoughData) {
+                    console.log('✅ Достаточно данных для реального режима');
+                    userData.has_real_data = true;
+                    
+                    // Обновляем интерфейс
+                    updateUserInterface(userData);
+                    
+                    // Сохраняем в базу
+                    updateLoadingStatus('Сохранение профиля...');
+                    await saveUserToDatabase(userData);
+                    
+                    showNotification(`Привет, ${userData.first_name}!`, 'success');
+                    
+                } else if (userData.is_ok_user && userData.is_app_user) {
+                    // Пользователь в OK.ru, но данных мало
+                    console.log('⚠️ Пользователь в OK.ru, но данных мало');
+                    
+                    // Создаем минимальные данные
+                    if (!userData.first_name || userData.first_name === 'Гость') {
+                        userData.first_name = 'Пользователь';
+                        userData.last_name = 'OK';
+                    }
+                    
+                    if (!userData.ok_id && debugInfo.params['viewer_id']) {
+                        userData.ok_id = 'ok_' + debugInfo.params['viewer_id'];
+                        userData.vk_id = userData.ok_id;
+                    }
+                    
+                    userData.has_real_data = true;
+                    updateUserInterface(userData);
+                    
+                    // Пытаемся сохранить
+                    await saveUserToDatabase(userData);
+                    showNotification('Добро пожаловать в ВМесте!', 'success');
+                    
+                } else {
+                    // Демо-режим
+                    console.log('⚠️ Запуск в демо-режиме');
+                    userData = await startDemoMode();
+                    showNotification('Запущен в демо-режиме', 'warning');
+                }
+                
+                // 7. Обновляем статус подключения
+                if (userData.has_real_data && userData.is_ok_user) {
+                    document.getElementById('connection-status').innerHTML = `
+                        <div class="status-dot" style="background: #50E3C2"></div>
+                        <span>Подключено к OK.ru</span>
+                    `;
+                } else {
+                    document.getElementById('connection-status').innerHTML = `
+                        <div class="status-dot" style="background: #FFA500"></div>
+                        <span>Демо-режим</span>
+                    `;
+                }
+                
+                // 8. Загружаем данные
+                updateLoadingStatus('Загрузка данных...');
+                await Promise.all([
+                    loadUserStats(),
+                    loadOceanMessages()
+                ]);
+                
+                // 9. Показываем приложение
+                showApp();
+                updateLoadingStatus('Готово!');
+                
+            } catch (error) {
+                console.error('❌ Критическая ошибка инициализации:', error);
+                updateLoadingStatus('Ошибка: ' + error.message);
+                
+                // Запускаем демо-режим в случае ошибки
+                setTimeout(async () => {
+                    await startDemoMode();
+                    await loadUserStats();
+                    showApp();
+                    showNotification('Запущен в демо-режиме', 'warning');
+                }, 1500);
+            }
+        }
+        
+        // ========== ОКЕАН ПОСЛАНИЙ ==========
         async function loadOceanMessages() {
             if (!supabaseClient) return;
             
@@ -958,16 +1169,20 @@
             }
             
             try {
+                const messageData = {
+                    content: text,
+                    sender_ok_id: currentUser.ok_id,
+                    sender_name: currentUser.full_name,
+                    sender_avatar: currentUser.avatar_url,
+                    is_anonymous: true,
+                    created_at: new Date().toISOString()
+                };
+                
+                console.log('📨 Отправка сообщения:', messageData);
+                
                 const { data, error } = await supabaseClient
                     .from('ocean_messages')
-                    .insert({
-                        content: text,
-                        sender_ok_id: currentUser.ok_id,
-                        sender_name: currentUser.full_name,
-                        sender_avatar: currentUser.avatar_url,
-                        is_anonymous: true,
-                        created_at: new Date().toISOString()
-                    })
+                    .insert(messageData)
                     .select()
                     .single();
                     
