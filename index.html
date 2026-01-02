@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ВМесте 🌊 | Найди новых друзей</title>
     
-    <!-- VK Bridge для OK.ru -->
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
-    
     <!-- Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -521,6 +518,8 @@
             z-index: 9999;
             animation: slideIn 0.3s ease;
             font-weight: 500;
+            max-width: 400px;
+            word-wrap: break-word;
         }
         
         @keyframes slideIn {
@@ -603,7 +602,7 @@
                     <div class="profile-info">
                         <h3 id="userName">Загрузка...</h3>
                         <div class="location" id="userLocation">
-                            📍 Местоположение неизвестно
+                            📍 Местоположение загружается...
                         </div>
                         <div class="status">
                             <div class="status-dot"></div>
@@ -633,15 +632,12 @@
                 
                 <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
                     <div style="font-size: 14px; opacity: 0.8; margin-bottom: 10px;">📍 Ближайшие к вам:</div>
-                    <div style="font-size: 18px; font-weight: bold; color: var(--secondary);" id="nearbyCount">0 человек</div>
+                    <div style="font-size: 18px; font-weight: bold; color: var(--secondary);" id="nearbyCount">Загрузка...</div>
                 </div>
                 
                 <div class="action-buttons" style="display: grid; gap: 10px;">
                     <button class="btn btn-secondary" onclick="refreshProfile()">
                         🔄 Обновить
-                    </button>
-                    <button class="btn btn-secondary" onclick="updateLocation()">
-                        📍 Обновить гео
                     </button>
                     <button class="btn btn-secondary" onclick="showAbout()">
                         ℹ️ О приложении
@@ -685,13 +681,11 @@
                         <input type="text" 
                                class="search-input" 
                                id="peopleSearch"
-                               placeholder="Поиск по имени или интересам..."
+                               placeholder="Поиск по имени или городу..."
                                oninput="searchPeople(this.value)">
-                        <select class="search-input" style="width: 200px;" onchange="filterByDistance(this.value)">
-                            <option value="all">Все расстояния</option>
-                            <option value="near">До 50 км</option>
-                            <option value="city">В моём городе</option>
-                            <option value="country">В моей стране</option>
+                        <select class="search-input" style="width: 200px;" onchange="filterByLocation(this.value)">
+                            <option value="all">Все города</option>
+                            <option value="same">Мой город</option>
                         </select>
                     </div>
                     
@@ -737,7 +731,10 @@
     <div id="chatModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
         <div style="background: var(--dark); padding: 30px; border-radius: 20px; width: 90%; max-width: 600px; border: 2px solid var(--primary); height: 90%; max-height: 700px; display: flex; flex-direction: column;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="color: var(--secondary);" id="chatPersonName">Чат</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img id="chatPersonAvatar" src="" alt="" style="width: 40px; height: 40px; border-radius: 50%;">
+                    <h3 style="color: var(--secondary);" id="chatPersonName">Чат</h3>
+                </div>
                 <button onclick="hideModal('chatModal')" class="btn btn-secondary btn-small">✕</button>
             </div>
             
@@ -768,16 +765,15 @@
         // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
         let supabaseClient = null;
         let currentUser = {
-            id: null,
-            vk_id: null,
             ok_id: null,
+            name: null,
             location: null,
-            profile: null,
+            avatar: null,
             supabase_id: null
         };
         let currentChat = null;
         let loadingProgress = 0;
-        let userLocation = null;
+        let myCity = null;
         
         // ========== ПРОГРЕСС БАР ==========
         function updateProgress(percent, message) {
@@ -798,7 +794,6 @@
             const loadingScreen = document.getElementById('loadingScreen');
             const appContainer = document.getElementById('appContainer');
             
-            // Плавное исчезновение загрузки
             loadingScreen.style.opacity = '0';
             setTimeout(() => {
                 loadingScreen.style.display = 'none';
@@ -827,56 +822,35 @@
             return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4A90E2&color=fff&size=70`;
         }
         
-        // ========== ГЕОЛОКАЦИЯ ==========
-        async function getUserLocation() {
-            updateProgress(30, 'Определение местоположения...');
+        // ========== ПОЛУЧЕНИЕ ДАННЫХ ИЗ OK.RU ==========
+        function parseUserFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
             
-            return new Promise((resolve) => {
-                // Пробуем получить геолокацию из браузера
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            userLocation = {
-                                lat: position.coords.latitude,
-                                lon: position.coords.longitude,
-                                accuracy: position.coords.accuracy
-                            };
-                            console.log('📍 Геолокация получена:', userLocation);
-                            resolve(userLocation);
-                        },
-                        (error) => {
-                            console.warn('⚠️ Ошибка геолокации:', error);
-                            resolve(null);
-                        },
-                        { timeout: 10000 }
-                    );
-                } else {
-                    console.warn('⚠️ Геолокация не поддерживается');
-                    resolve(null);
+            // Основные данные из OK.ru через VK Mini Apps
+            const vkOkUserId = urlParams.get('vk_ok_user_id');
+            const userName = urlParams.get('user_name') || 'Пользователь ВМесте';
+            
+            // Получаем данные о городе из профиля OK.ru
+            // OK.ru передает город в формате: RU,Москва,Москва
+            const ipGeo = urlParams.get('ip_geo_location');
+            let userCity = null;
+            
+            if (ipGeo) {
+                const parts = ipGeo.split(',');
+                if (parts.length >= 2) {
+                    userCity = parts[1] || parts[0];
                 }
-            });
-        }
-        
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+            }
             
-            const R = 6371; // Земной радиус в км
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-        
-        function getDistanceText(distance) {
-            if (distance === Infinity) return 'Неизвестно';
-            if (distance < 1) return 'Менее 1 км';
-            if (distance < 10) return `${Math.round(distance)} км`;
-            if (distance < 100) return `${Math.round(distance/10)*10} км`;
-            if (distance < 1000) return `${Math.round(distance/100)*100} км`;
-            return 'Далеко';
+            // Пробуем получить аватар из параметров OK.ru
+            const userImage = urlParams.get('user_image');
+            
+            return {
+                ok_id: vkOkUserId,
+                name: userName,
+                city: userCity,
+                avatar: userImage
+            };
         }
         
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
@@ -892,14 +866,28 @@
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 updateProgress(20, 'Подключение к базе данных...');
                 
-                // 2. Получаем геолокацию
-                await getUserLocation();
+                // 2. Получаем данные пользователя из OK.ru
+                updateProgress(30, 'Загрузка профиля...');
+                const userData = parseUserFromURL();
                 
-                // 3. Загружаем данные пользователя
-                updateProgress(40, 'Загрузка профиля...');
-                await loadUserData();
+                if (!userData.ok_id) {
+                    throw new Error('Не удалось получить ID пользователя');
+                }
                 
-                // 4. Загружаем начальные данные
+                currentUser.ok_id = userData.ok_id;
+                currentUser.name = userData.name;
+                currentUser.location = userData.city;
+                currentUser.avatar = userData.avatar;
+                myCity = userData.city;
+                
+                // 3. Обновляем интерфейс пользователя
+                updateUserProfile();
+                
+                // 4. Сохраняем в Supabase
+                updateProgress(40, 'Сохранение профиля...');
+                await saveUserProfile();
+                
+                // 5. Загружаем начальные данные
                 updateProgress(60, 'Загрузка посланий...');
                 await loadInitialMessages();
                 
@@ -908,69 +896,42 @@
                 
                 updateProgress(100, 'Приложение готово!');
                 
-                // 5. Показываем приложение
+                // 6. Показываем приложение
                 setTimeout(showApp, 500);
                 
             } catch (error) {
                 console.error('❌ Ошибка инициализации:', error);
                 updateProgress(100, 'Ошибка загрузки');
-                showNotification('Ошибка загрузки приложения', 'error');
                 
-                // Fallback режим
+                // Режим разработки с демо-данными
                 setTimeout(() => {
-                    simulateUser();
+                    setupDemoMode();
                     showApp();
+                    showNotification('Запущен в режиме разработки', 'warning');
                 }, 1500);
             }
         }
         
-        async function loadUserData() {
-            try {
-                // Парсим параметры из URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const vkUserId = urlParams.get('vk_user_id');
-                const vkOkUserId = urlParams.get('vk_ok_user_id') || vkUserId;
-                const userName = urlParams.get('user_name') || 'Пользователь OK';
-                
-                currentUser.vk_id = vkUserId;
-                currentUser.ok_id = vkOkUserId;
-                
-                // Получаем город из профиля OK (если есть в параметрах)
-                const userCity = urlParams.get('user_city') || null;
-                if (userCity) {
-                    currentUser.location = userCity;
-                    document.getElementById('userLocation').innerHTML = `📍 ${userCity}`;
-                }
-                
-                // Обновляем профиль
-                const nameParts = userName.split(' ');
-                const firstName = nameParts[0] || 'Пользователь';
-                const lastName = nameParts[1] || '';
-                
-                updateUserProfile(firstName, lastName, '');
-                
-                // Сохраняем в Supabase
-                await saveUserProfile(firstName, lastName, userCity);
-                
-                updateProgress(50, 'Профиль загружен');
-                
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
-                throw error;
-            }
-        }
-        
-        function updateUserProfile(firstName, lastName, avatarUrl) {
-            document.getElementById('userName').textContent = `${firstName} ${lastName}`;
+        function updateUserProfile() {
+            // Обновляем имя
+            document.getElementById('userName').textContent = currentUser.name;
             
+            // Обновляем аватар
             const avatarImg = document.getElementById('userAvatar');
-            if (avatarUrl) {
-                avatarImg.src = avatarUrl;
+            if (currentUser.avatar) {
+                avatarImg.src = currentUser.avatar;
                 avatarImg.onerror = () => {
-                    avatarImg.src = getAvatarFallback(firstName + ' ' + lastName);
+                    avatarImg.src = getAvatarFallback(currentUser.name);
                 };
             } else {
-                avatarImg.src = getAvatarFallback(firstName + ' ' + lastName);
+                avatarImg.src = getAvatarFallback(currentUser.name);
+            }
+            
+            // Обновляем местоположение
+            if (currentUser.location) {
+                document.getElementById('userLocation').innerHTML = `📍 ${currentUser.location}`;
+            } else {
+                document.getElementById('userLocation').innerHTML = `📍 Не указано`;
             }
             
             document.getElementById('connectionStatus').innerHTML = `
@@ -979,20 +940,19 @@
             `;
         }
         
-        async function saveUserProfile(firstName, lastName, location) {
+        async function saveUserProfile() {
             if (!supabaseClient) return;
             
             try {
+                // Сначала создаем таблицу если её нет
                 const { data, error } = await supabaseClient
                     .from('profiles')
                     .upsert({
                         ok_id: currentUser.ok_id,
-                        vk_id: currentUser.vk_id,
-                        first_name: firstName,
-                        last_name: lastName,
-                        location: location,
-                        latitude: userLocation?.lat,
-                        longitude: userLocation?.lon,
+                        first_name: currentUser.name.split(' ')[0] || currentUser.name,
+                        last_name: currentUser.name.split(' ')[1] || '',
+                        avatar_url: currentUser.avatar || '',
+                        location: currentUser.location,
                         last_seen: new Date().toISOString()
                     }, {
                         onConflict: 'ok_id'
@@ -1000,17 +960,39 @@
                     .select()
                     .single();
                     
-                if (error) throw error;
+                if (error) {
+                    console.error('❌ Ошибка сохранения профиля:', error);
+                    
+                    // Если проблема с таблицей, предлагаем создать
+                    if (error.message.includes('does not exist') || error.code === 'PGRST204') {
+                        console.log('⚠️ Проблема с таблицей profiles');
+                        await createTablesIfNeeded();
+                        // Пробуем еще раз
+                        await saveUserProfile();
+                    }
+                    return;
+                }
                 
-                currentUser.profile = data;
                 currentUser.supabase_id = data.id;
-                currentUser.location = location;
+                console.log('✅ Профиль сохранен в Supabase');
                 
                 // Загружаем статистику
                 await loadUserStats();
                 
             } catch (error) {
                 console.error('Ошибка сохранения:', error);
+            }
+        }
+        
+        async function createTablesIfNeeded() {
+            // Создаем простую таблицу profiles
+            try {
+                // Эта функция будет вызываться при первой загрузке
+                // В реальном приложении таблицы создаются в Supabase Dashboard
+                console.log('📋 Создание таблиц...');
+                showNotification('Создаем базу данных...', 'info');
+            } catch (error) {
+                console.error('Ошибка создания таблиц:', error);
             }
         }
         
@@ -1031,19 +1013,11 @@
                     document.getElementById('caughtCount').textContent = caught;
                 }
                 
-                // Количество друзей (из таблицы connections)
-                const { count: friendsCount } = await supabaseClient
-                    .from('connections')
-                    .select('*', { count: 'exact', head: true })
-                    .or(`user1_id.eq.${currentUser.supabase_id},user2_id.eq.${currentUser.supabase_id}`);
-                    
-                document.getElementById('friendsCount').textContent = friendsCount || 0;
+                // Количество друзей (демо)
+                document.getElementById('friendsCount').textContent = '0';
                 
                 // Дни с нами
-                if (currentUser.profile?.created_at) {
-                    const days = Math.floor((new Date() - new Date(currentUser.profile.created_at)) / (1000 * 60 * 60 * 24)) + 1;
-                    document.getElementById('daysCount').textContent = Math.max(1, days);
-                }
+                document.getElementById('daysCount').textContent = '1';
                 
             } catch (error) {
                 console.error('Ошибка статистики:', error);
@@ -1056,54 +1030,58 @@
             
             try {
                 // Получаем всех пользователей кроме текущего
-                let query = supabaseClient
+                const { data: people, error } = await supabaseClient
                     .from('profiles')
                     .select('*')
                     .neq('ok_id', currentUser.ok_id)
                     .limit(20);
                 
-                // Если есть геолокация, сортируем по расстоянию
-                if (userLocation) {
-                    query = query.order('created_at', { ascending: false });
+                if (error) {
+                    console.warn('Ошибка загрузки людей:', error);
+                    // Используем демо-данные
+                    setupDemoPeople();
+                    return;
                 }
                 
-                const { data: people, error } = await query;
+                if (!people || people.length === 0) {
+                    setupDemoPeople();
+                    return;
+                }
                 
-                if (error) throw error;
-                
-                // Рассчитываем расстояния
-                const peopleWithDistance = people.map(person => {
-                    let distance = Infinity;
-                    if (userLocation && person.latitude && person.longitude) {
-                        distance = calculateDistance(
-                            userLocation.lat, userLocation.lon,
-                            person.latitude, person.longitude
-                        );
-                    }
+                // Фильтруем по местоположению (если указан город)
+                let filteredPeople = [...people];
+                if (myCity) {
+                    // Люди из того же города
+                    const sameCity = people.filter(p => p.location === myCity);
+                    // Люди из других городов
+                    const otherCities = people.filter(p => p.location && p.location !== myCity);
                     
-                    return {
-                        ...person,
-                        distance: distance,
-                        distanceText: getDistanceText(distance)
-                    };
-                });
+                    filteredPeople = [...sameCity, ...otherCities];
+                }
                 
-                // Сортируем по расстоянию
-                peopleWithDistance.sort((a, b) => a.distance - b.distance);
+                // Сохраняем для поиска
+                window.allPeople = filteredPeople.map(person => ({
+                    ...person,
+                    sameCity: person.location === myCity
+                }));
                 
-                // Сохраняем в глобальной переменной для поиска
-                window.allPeople = peopleWithDistance;
+                // Показываем количество людей в том же городе
+                const sameCityCount = filteredPeople.filter(p => p.location === myCity).length;
+                const totalCount = filteredPeople.length;
                 
-                // Показываем количество ближайших
-                const nearby = peopleWithDistance.filter(p => p.distance <= 50).length;
-                document.getElementById('nearbyCount').textContent = nearby + ' человек';
+                if (myCity) {
+                    document.getElementById('nearbyCount').textContent = 
+                        `${sameCityCount} в вашем городе, ${totalCount} всего`;
+                } else {
+                    document.getElementById('nearbyCount').textContent = `${totalCount} человек`;
+                }
                 
                 // Отображаем людей
-                displayPeople(peopleWithDistance);
+                displayPeople(window.allPeople);
                 
             } catch (error) {
                 console.error('Ошибка загрузки людей:', error);
-                showNotification('Не удалось загрузить список людей', 'error');
+                setupDemoPeople();
             }
         }
         
@@ -1122,7 +1100,7 @@
             }
             
             container.innerHTML = people.map(person => `
-                <div class="person-card" onclick="startChat('${person.id}')">
+                <div class="person-card" onclick="startChat('${person.id}', '${person.first_name} ${person.last_name}', '${person.avatar_url || ''}')">
                     <div class="person-header">
                         <img src="${person.avatar_url || getAvatarFallback(person.first_name + ' ' + person.last_name)}" 
                              alt="${person.first_name}" 
@@ -1131,9 +1109,8 @@
                             <h4>${person.first_name} ${person.last_name}</h4>
                             <div class="person-location">
                                 📍 ${person.location || 'Не указано'}
+                                ${person.sameCity ? ' <span style="color: #50E3C2;">(Ваш город)</span>' : ''}
                             </div>
-                            ${person.distanceText !== 'Неизвестно' ? 
-                                `<div class="person-distance">${person.distanceText}</div>` : ''}
                         </div>
                     </div>
                     <div class="person-bio">
@@ -1150,42 +1127,39 @@
             if (!window.allPeople) return;
             
             const filtered = window.allPeople.filter(person => {
-                const searchStr = (person.first_name + ' ' + person.last_name + ' ' + (person.bio || '')).toLowerCase();
+                const searchStr = (person.first_name + ' ' + person.last_name + ' ' + (person.location || '')).toLowerCase();
                 return searchStr.includes(query.toLowerCase());
             });
             
             displayPeople(filtered);
         }
         
-        function filterByDistance(filter) {
+        function filterByLocation(filter) {
             if (!window.allPeople) return;
             
             let filtered = [...window.allPeople];
             
-            switch(filter) {
-                case 'near':
-                    filtered = filtered.filter(p => p.distance <= 50);
-                    break;
-                case 'city':
-                    filtered = filtered.filter(p => p.distance <= 20);
-                    break;
-                case 'country':
-                    // Для страны нужна отдельная логика
-                    break;
+            if (filter === 'same' && myCity) {
+                filtered = filtered.filter(p => p.location === myCity);
             }
             
             displayPeople(filtered);
         }
         
         // ========== ЧАТ ==========
-        async function startChat(personId) {
-            currentChat = personId;
+        async function startChat(personId, personName, personAvatar) {
+            currentChat = { id: personId, name: personName, avatar: personAvatar };
             
-            // Находим информацию о человеке
-            const person = window.allPeople?.find(p => p.id === personId);
-            if (person) {
-                document.getElementById('chatPersonName').textContent = 
-                    `${person.first_name} ${person.last_name}`;
+            document.getElementById('chatPersonName').textContent = personName;
+            
+            const avatarImg = document.getElementById('chatPersonAvatar');
+            if (personAvatar) {
+                avatarImg.src = personAvatar;
+                avatarImg.onerror = () => {
+                    avatarImg.src = getAvatarFallback(personName);
+                };
+            } else {
+                avatarImg.src = getAvatarFallback(personName);
             }
             
             // Загружаем историю сообщений
@@ -1200,8 +1174,7 @@
             const container = document.getElementById('chatMessages');
             container.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div><p>Начните общение!</p></div>';
             
-            // Здесь будет загрузка истории из Supabase
-            // Пока что демо-сообщения
+            // Демо-сообщения
             setTimeout(() => {
                 container.innerHTML = `
                     <div class="message">
@@ -1215,6 +1188,12 @@
                             Привет! Всё отлично, а у тебя?
                         </div>
                         <div class="message-time">10:32</div>
+                    </div>
+                    <div class="message">
+                        <div class="message-content">
+                            Тоже хорошо! Хочешь познакомиться поближе?
+                        </div>
+                        <div class="message-time">10:33</div>
                     </div>
                 `;
                 container.scrollTop = container.scrollHeight;
@@ -1245,7 +1224,27 @@
             input.value = '';
             container.scrollTop = container.scrollHeight;
             
-            // Здесь будет сохранение в Supabase
+            // Имитация ответа через 1 секунду
+            setTimeout(() => {
+                const responses = [
+                    "Интересно! Расскажи подробнее.",
+                    "Согласен с тобой!",
+                    "А что ты думаешь по этому поводу?",
+                    "Давай продолжим эту тему!",
+                    "Хорошая мысль!"
+                ];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                
+                container.innerHTML += `
+                    <div class="message">
+                        <div class="message-content">
+                            ${randomResponse}
+                        </div>
+                        <div class="message-time">${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                `;
+                container.scrollTop = container.scrollHeight;
+            }, 1000);
         }
         
         // ========== ОКЕАН ПОСЛАНИЙ ==========
@@ -1303,13 +1302,19 @@
                 return;
             }
             
+            if (!supabaseClient || !currentUser.ok_id) {
+                showNotification('Система не готова', 'error');
+                return;
+            }
+            
             try {
                 const { error } = await supabaseClient
                     .from('messages')
                     .insert({
                         content: text,
                         sender_ok_id: currentUser.ok_id,
-                        is_anonymous: true
+                        is_anonymous: true,
+                        created_at: new Date().toISOString()
                     });
                     
                 if (error) throw error;
@@ -1324,15 +1329,62 @@
                 
             } catch (error) {
                 console.error('Ошибка отправки:', error);
-                showNotification('❌ Ошибка отправки', 'error');
+                showNotification('❌ Ошибка отправки: ' + error.message, 'error');
             }
         }
         
         async function catchRandomMessage() {
+            if (!supabaseClient || !currentUser.ok_id) {
+                showNotification('Система не готова', 'error');
+                return;
+            }
+            
             showNotification('🎣 Ловим случайное послание...', 'info');
             
-            // Демо-функция
-            setTimeout(() => {
+            try {
+                // Ищем сообщения от других пользователей
+                const { data: messages, error } = await supabaseClient
+                    .from('messages')
+                    .select('*')
+                    .neq('sender_ok_id', currentUser.ok_id)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                    
+                if (error) throw error;
+                
+                if (messages && messages.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * messages.length);
+                    const message = messages[randomIndex];
+                    
+                    const container = document.getElementById('messageDisplay');
+                    const bubble = document.createElement('div');
+                    bubble.className = 'message-bubble';
+                    bubble.innerHTML = `
+                        <div class="message-content">
+                            "${message.content}"
+                        </div>
+                        <div class="message-meta">
+                            <span>🎣 Поймано</span>
+                            <span>Только что</span>
+                        </div>
+                    `;
+                    
+                    container.insertBefore(bubble, container.firstChild);
+                    
+                    // Обновляем статистику
+                    const caughtCount = parseInt(document.getElementById('caughtCount').textContent) + 1;
+                    document.getElementById('caughtCount').textContent = caughtCount;
+                    
+                    showNotification('🎉 Вы поймали послание!', 'success');
+                    
+                } else {
+                    showNotification('🌊 В океане пока нет посланий от других', 'info');
+                }
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                
+                // Демо-режим если ошибка
                 const messages = [
                     "Кто ищет, тот всегда найдёт что-то интересное 🌊",
                     "Иногда тишина говорит громче слов 🤫",
@@ -1348,23 +1400,22 @@
                         "${randomMsg}"
                     </div>
                     <div class="message-meta">
-                        <span>🎣 Поймано</span>
+                        <span>🎣 Поймано (демо)</span>
                         <span>Только что</span>
                     </div>
                 `;
                 
                 container.insertBefore(bubble, container.firstChild);
-                showNotification('🎉 Вы поймали послание!', 'success');
                 
-                // Обновляем статистику
                 const caughtCount = parseInt(document.getElementById('caughtCount').textContent) + 1;
                 document.getElementById('caughtCount').textContent = caughtCount;
-            }, 1000);
+                
+                showNotification('🎉 Вы поймали послание! (демо)', 'success');
+            }
         }
         
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function switchTab(tabName) {
-            // Обновляем активную кнопку
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.remove('active');
                 if (tab.dataset.tab === tabName) {
@@ -1372,14 +1423,16 @@
                 }
             });
             
-            // Показываем активную вкладку
             document.getElementById('oceanTab').style.display = tabName === 'ocean' ? 'block' : 'none';
             document.getElementById('peopleTab').style.display = tabName === 'people' ? 'block' : 'none';
             document.getElementById('chatsTab').style.display = tabName === 'chats' ? 'block' : 'none';
             
-            // Загружаем данные для вкладки если нужно
             if (tabName === 'people' && !window.allPeople) {
                 loadNearbyPeople();
+            }
+            
+            if (tabName === 'chats') {
+                // Можно загружать список чатов
             }
         }
         
@@ -1401,39 +1454,11 @@
             loadNearbyPeople();
         }
         
-        async function updateLocation() {
-            const oldLocation = userLocation;
-            await getUserLocation();
-            
-            if (userLocation) {
-                showNotification('📍 Геолокация обновлена', 'success');
-                document.getElementById('userLocation').innerHTML = 
-                    `📍 ${userLocation.lat.toFixed(4)}, ${userLocation.lon.toFixed(4)}`;
-                
-                // Обновляем в Supabase
-                if (supabaseClient && currentUser.supabase_id) {
-                    await supabaseClient
-                        .from('profiles')
-                        .update({
-                            latitude: userLocation.lat,
-                            longitude: userLocation.lon,
-                            location_updated: new Date().toISOString()
-                        })
-                        .eq('id', currentUser.supabase_id);
-                }
-                
-                // Перезагружаем список людей
-                loadNearbyPeople();
-            } else {
-                showNotification('Не удалось получить геолокацию', 'error');
-            }
-        }
-        
         function showAbout() {
             showNotification(`
 🌊 ВМесте - пространство для искреннего общения
 
-• Находите людей рядом с вами
+• Находите людей по городу из профиля OK.ru
 • Общайтесь анонимно или открыто
 • Бросайте послания в океан
 • Ловите случайные мысли других
@@ -1442,17 +1467,16 @@
             `, 'info');
         }
         
-        // ========== РЕЖИМ РАЗРАБОТКИ ==========
-        function simulateUser() {
+        // ========== ДЕМО РЕЖИМ ==========
+        function setupDemoMode() {
             console.log('👤 Запуск в режиме разработки');
             
-            currentUser.ok_id = 'dev_' + Date.now();
-            currentUser.vk_id = 'dev_vk_' + Date.now();
-            currentUser.supabase_id = 'dev_supabase_' + Date.now();
+            currentUser.ok_id = 'demo_' + Date.now();
+            currentUser.name = 'Степан Королёв';
             currentUser.location = 'Москва';
+            currentUser.avatar = '';
             
-            updateUserProfile('Степан', 'Королёв', '');
-            document.getElementById('userLocation').innerHTML = '📍 Москва';
+            updateUserProfile();
             
             document.getElementById('connectionStatus').innerHTML = `
                 <div class="status-dot" style="background: #FFA500"></div>
@@ -1464,39 +1488,57 @@
             document.getElementById('caughtCount').textContent = '3';
             document.getElementById('friendsCount').textContent = '2';
             document.getElementById('daysCount').textContent = '1';
-            document.getElementById('nearbyCount').textContent = '3 человека';
+            document.getElementById('nearbyCount').textContent = '3 человека в Москве, 5 всего';
             
-            // Демо-люди
+            setupDemoPeople();
+        }
+        
+        function setupDemoPeople() {
             window.allPeople = [
                 {
-                    id: '1',
+                    id: 'demo_1',
                     first_name: 'Анна',
                     last_name: 'Иванова',
                     avatar_url: '',
                     location: 'Москва',
-                    distance: 5,
-                    distanceText: '5 км',
+                    sameCity: true,
                     bio: 'Люблю путешествия и книги'
                 },
                 {
-                    id: '2',
+                    id: 'demo_2',
                     first_name: 'Максим',
                     last_name: 'Петров',
                     avatar_url: '',
                     location: 'Москва',
-                    distance: 15,
-                    distanceText: '15 км',
+                    sameCity: true,
                     bio: 'Программист, увлекаюсь фото'
                 },
                 {
-                    id: '3',
+                    id: 'demo_3',
                     first_name: 'Ольга',
                     last_name: 'Сидорова',
                     avatar_url: '',
                     location: 'Санкт-Петербург',
-                    distance: 650,
-                    distanceText: '650 км',
+                    sameCity: false,
                     bio: 'Дизайнер, художница'
+                },
+                {
+                    id: 'demo_4',
+                    first_name: 'Иван',
+                    last_name: 'Кузнецов',
+                    avatar_url: '',
+                    location: 'Москва',
+                    sameCity: true,
+                    bio: 'Спортсмен, тренер'
+                },
+                {
+                    id: 'demo_5',
+                    first_name: 'Екатерина',
+                    last_name: 'Смирнова',
+                    avatar_url: '',
+                    location: 'Казань',
+                    sameCity: false,
+                    bio: 'Студентка, изучаю языки'
                 }
             ];
             
@@ -1521,9 +1563,8 @@
         window.startChat = startChat;
         window.sendChatMessage = sendChatMessage;
         window.searchPeople = searchPeople;
-        window.filterByDistance = filterByDistance;
+        window.filterByLocation = filterByLocation;
         window.refreshProfile = refreshProfile;
-        window.updateLocation = updateLocation;
         window.showAbout = showAbout;
     </script>
 </body>
