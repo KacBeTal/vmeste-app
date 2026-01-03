@@ -3,226 +3,221 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ВМесте 🌊 | Океан посланий из OK.ru</title>
+<title>ВМесте 🌊 | Океан посланий OK.ru</title>
 
-<!-- Supabase JS -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <style>
-/* ---- Стили как в твоём шаблоне ---- */
+/* ===== Стили ===== */
 * {margin:0;padding:0;box-sizing:border-box;}
 :root {
-    --primary:#4A90E2;
-    --secondary:#50E3C2;
-    --dark:#1A1A2E;
-    --light:#F8F9FA;
-    --accent:#FF6B8B;
-    --ok-orange:#EE8C3A;
+  --primary:#4A90E2;
+  --secondary:#50E3C2;
+  --dark:#1A1A2E;
+  --light:#F8F9FA;
+  --accent:#FF6B8B;
+  --ok-orange:#EE8C3A;
 }
 body {
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
-    background:linear-gradient(135deg,#0F2027,#203A43,#2C5364);
-    color:var(--light);min-height:100vh;padding:20px;line-height:1.6;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+  background:linear-gradient(135deg,#0F2027,#203A43,#2C5364);
+  color:var(--light);
+  min-height:100vh;
+  line-height:1.6;
+  padding:20px;
 }
 .loading{text-align:center;padding:50px;font-size:18px;}
 .loader{border:4px solid rgba(255,255,255,0.1);border-top:4px solid var(--ok-orange);
 border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:20px auto;}
 @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
 .app-container{max-width:1200px;margin:0 auto;display:none;}
-/* Остальные стили сохраняем из твоего шаблона */
+
+/* Header */
+.header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;margin-bottom:30px;border-bottom:2px solid rgba(255,255,255,0.1);}
+.logo{display:flex;align-items:center;gap:15px;}
+.logo h1{font-size:28px;background:linear-gradient(45deg,var(--ok-orange),var(--primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-icon{font-size:36px;animation:wave 3s ease-in-out infinite;}
+@keyframes wave{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+
+/* Layout */
+.main-layout{display:grid;grid-template-columns:300px 1fr 300px;gap:25px;}
+@media (max-width:1024px){.main-layout{grid-template-columns:1fr;}}
+
+/* Profile Card */
+.profile-card{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:20px;padding:25px;border:1px solid rgba(255,255,255,0.1);}
+.profile-header{display:flex;align-items:center;gap:15px;margin-bottom:20px;}
+.avatar{width:80px;height:80px;border-radius:50%;border:3px solid var(--ok-orange);object-fit:cover;}
+.profile-info h3{font-size:20px;margin-bottom:5px;}
+.location{font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--ok-orange);}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok-orange);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:20px 0;}
+.stat-item{text-align:center;padding:12px;background:rgba(255,255,255,0.05);border-radius:12px;}
+.stat-value{font-size:24px;font-weight:bold;color:var(--ok-orange);}
+.stat-label{font-size:12px;opacity:0.8;margin-top:5px;}
+
+/* Ocean */
+.ocean-section{background:rgba(255,255,255,0.03);border-radius:25px;padding:30px;border:2px solid rgba(238,140,58,0.2);position:relative;overflow:hidden;}
+.ocean-title{text-align:center;margin-bottom:30px;font-size:24px;}
+.ocean-title span{background:linear-gradient(45deg,var(--ok-orange),var(--primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.message-bubble{background:rgba(255,255,255,0.1);border-radius:20px;padding:25px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);transition:transform 0.3s ease;}
+.message-bubble:hover{transform:translateY(-5px);background:rgba(255,255,255,0.15);}
+.message-content{font-size:18px;line-height:1.6;margin-bottom:15px;font-style:italic;}
+.message-meta{display:flex;justify-content:space-between;font-size:14px;opacity:0.7;}
+
+/* Buttons */
+.action-buttons{display:grid;gap:15px;margin-top:30px;}
+.btn{padding:16px 24px;border:none;border-radius:15px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.3s ease;}
+.btn-primary{background:linear-gradient(45deg,var(--ok-orange),var(--primary));color:white;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(238,140,58,0.3);}
+.btn-secondary{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);}
+.btn-secondary:hover{background:rgba(255,255,255,0.2);}
+
+/* Waves animation */
+.waves{position:fixed;bottom:0;left:0;right:0;height:100px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");background-size:1200px 100px;animation:waves 15s linear infinite;z-index:-1;}
+@keyframes waves{0%{background-position-x:0;}100%{background-position-x:1200px;}}
 </style>
 </head>
 <body>
+<div class="waves"></div>
 <div id="loading" class="loading">
-    <div class="loader"></div>
-    <p>Загрузка ВМесте...</p>
-    <p id="loading-status">Подключение к OK.ru...</p>
+  <div class="loader"></div>
+  <p>Загрузка ВМесте...</p>
+  <p id="loading-status">Подключение к OK.ru...</p>
 </div>
 
 <div class="app-container" id="app-container">
-    <!-- Header -->
-    <header class="header">
-        <div class="logo">
-            <div class="logo-icon">🌊</div>
-            <h1>ВМесте</h1>
+  <header class="header">
+    <div class="logo"><div class="logo-icon">🌊</div><h1>ВМесте</h1></div>
+    <div class="status" id="connection-status"><div class="status-dot"></div><span>OK.ru</span></div>
+  </header>
+
+  <main class="main-layout">
+    <aside class="profile-card">
+      <div class="profile-header">
+        <img src="" class="avatar" id="user-avatar">
+        <div class="profile-info">
+          <h3 id="user-name">Загрузка...</h3>
+          <div class="location" id="user-location">📍 Одноклассники</div>
+          <div class="status"><div class="status-dot"></div><span id="user-status">online</span></div>
         </div>
-        <div class="status" id="connection-status">
-            <div class="status-dot"></div>
-            <span>OK.ru</span>
-        </div>
-    </header>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-item"><div class="stat-value" id="sent-count">0</div><div class="stat-label">Отправлено</div></div>
+        <div class="stat-item"><div class="stat-value" id="caught-count">0</div><div class="stat-label">Поймано</div></div>
+        <div class="stat-item"><div class="stat-value" id="likes-count">0</div><div class="stat-label">Лайков</div></div>
+        <div class="stat-item"><div class="stat-value" id="days-count">1</div><div class="stat-label">Дней в OK</div></div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="refreshProfile()">🔄 Обновить</button>
+        <button class="btn btn-secondary" onclick="showAbout()">ℹ️ О приложении</button>
+      </div>
+    </aside>
 
-    <main class="main-layout">
-        <!-- Left: Profile -->
-        <aside class="profile-card">
-            <div class="profile-header" id="profile-header">
-                <img src="" alt="Avatar" class="avatar" id="user-avatar">
-                <div class="profile-info">
-                    <h3 id="user-name">Загрузка...</h3>
-                    <div class="location" id="user-location">📍 OK.ru</div>
-                    <div class="status">
-                        <div class="status-dot"></div>
-                        <span id="user-status">online</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="sent-count">0</div>
-                    <div class="stat-label">Отправлено</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="caught-count">0</div>
-                    <div class="stat-label">Поймано</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="likes-count">0</div>
-                    <div class="stat-label">Лайков</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="days-count">1</div>
-                    <div class="stat-label">Дней в OK</div>
-                </div>
-            </div>
-
-            <div class="action-buttons">
-                <button class="btn btn-secondary" onclick="refreshProfile()">🔄 Обновить</button>
-                <button class="btn btn-secondary" onclick="showAbout()">ℹ️ О приложении</button>
-            </div>
-        </aside>
-
-        <!-- Center: Ocean -->
-        <section class="ocean-section">
-            <h2 class="ocean-title"><span>🌊 Океан посланий из OK.ru</span></h2>
-            <div style="margin-bottom:20px;text-align:center;">
-                <div class="ok-badge">
-                    <span>👥 Пользователей OK.ru онлайн: </span>
-                    <span id="online-count">0</span>
-                </div>
-            </div>
-            <div class="action-buttons">
-                <button class="btn btn-primary" onclick="showSendMessage()">✍️ Бросить послание</button>
-                <button class="btn btn-primary" onclick="catchRandomMessage()">🎣 Поймать послание</button>
-            </div>
-            <div id="message-display" style="margin-top:30px;">
-                <div class="message-bubble">
-                    <div class="message-content">
-                        "Добро пожаловать из OK.ru! Бросьте своё первое послание в океан или поймайте чужое."
-                    </div>
-                    <div class="message-meta">
-                        <span>💬 OK.ru</span>
-                        <span>Только что</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Right: Info -->
-        <aside class="info-panel">
-            <h3 class="info-title">📊 О приложении</h3>
-            <p style="margin-bottom:15px;"><strong>"ВМесте"</strong> — эксклюзивно для пользователей OK.ru.</p>
-        </aside>
-    </main>
+    <section class="ocean-section">
+      <h2 class="ocean-title"><span>🌊 Океан посланий OK.ru</span></h2>
+      <div style="margin-bottom:20px;text-align:center;">
+        <div class="ok-badge">👥 Пользователей онлайн: <span id="online-count">0</span></div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn btn-primary" onclick="showSendMessage()">✍️ Бросить послание</button>
+        <button class="btn btn-primary" onclick="catchRandomMessage()">🎣 Поймать послание</button>
+      </div>
+      <div id="message-display" style="margin-top:30px;"></div>
+    </section>
+  </main>
 </div>
 
-<!-- Модальное окно -->
 <div id="sendMessageModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:var(--dark);padding:30px;border-radius:20px;width:90%;max-width:500px;border:2px solid var(--ok-orange);">
-        <h3 style="margin-bottom:20px;color:var(--ok-orange);">✍️ Бросить послание в океан</h3>
-        <textarea id="messageInput" placeholder="Что вы хотите сказать другим пользователям OK.ru?" style="width:100%;height:150px;padding:15px;border-radius:12px;background:rgba(255,255,255,0.05);color:white;border:1px solid rgba(255,255,255,0.2);font-size:16px;resize:vertical;"></textarea>
-        <div style="display:flex;gap:10px;margin-top:20px;">
-            <button onclick="sendMessage()" class="btn btn-primary" style="flex:1;">🌊 Отправить</button>
-            <button onclick="hideModal('sendMessageModal')" class="btn btn-secondary" style="flex:1;">Отмена</button>
-        </div>
+  <div style="background:var(--dark);padding:30px;border-radius:20px;width:90%;max-width:500px;border:2px solid var(--ok-orange);">
+    <h3 style="margin-bottom:20px;color:var(--ok-orange);">✍️ Бросить послание</h3>
+    <textarea id="messageInput" placeholder="Напишите послание" style="width:100%;height:150px;padding:15px;border-radius:12px;background:rgba(255,255,255,0.05);color:white;border:1px solid rgba(255,255,255,0.2);font-size:16px;"></textarea>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="sendMessage()" class="btn btn-primary" style="flex:1;">🌊 Отправить</button>
+      <button onclick="hideModal('sendMessageModal')" class="btn btn-secondary" style="flex:1;">Отмена</button>
     </div>
+  </div>
 </div>
 
 <script>
-const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
+const SUPABASE_URL='https://pyhatmplhbogwufatdga.supabase.co';
+const SUPABASE_KEY='sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser={ok_id:null,full_name:'',avatar_url:'',location:'Одноклассники'};
 
-// 👇 создаём клиент Realtime
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let currentUser = { ok_id:null, full_name:'', avatar_url:'', location:'Одноклассники' };
-
-// --- Утилиты ---
+// ======== Функции ========
 function updateLoadingStatus(msg){document.getElementById('loading-status').textContent=msg;}
 function showApp(){document.getElementById('loading').style.display='none';document.getElementById('app-container').style.display='block';}
 function showNotification(msg,type='success'){const n=document.createElement('div');n.className='notification';n.style.background=type==='ok'?'#EE8C3A':type==='error'?'#FF6B8B':type==='warning'?'#FFA500':'#50E3C2';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>{n.remove()},3000);}
-
 function getOKAvatarUrl(userId,firstName='Пользователь',lastName='OK'){return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName+' '+lastName)}&background=EE8C3A&color=fff&size=200`;}
 
-// --- Получение данных пользователя ---
+// ======== Получение данных OK.ru ========
 function getOKUserData(){
-    const urlParams=new URLSearchParams(window.location.search);
-    const params={};for(const [k,v] of urlParams.entries()) params[k]=v;
-    if(params['vk_client']!=='ok'||params['vk_is_app_user']!=='true') return null;
-    const okUserId=params['vk_ok_user_id']; const vkUserId=params['vk_user_id'];
-    if(!okUserId && !vkUserId) return null;
-    return { ok_id: okUserId, vk_user_id: vkUserId, first_name:'Пользователь', last_name:'OK.ru', full_name:'Пользователь OK.ru', avatar_url:getOKAvatarUrl(okUserId), location:'Одноклассники' };
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('vk_client')!=='ok'||params.get('vk_is_app_user')!=='true') return null;
+  const okUserId=params.get('vk_ok_user_id'),firstName=params.get('vk_first_name')||'Пользователь',lastName=params.get('vk_last_name')||'OK.ru';
+  if(!okUserId) return null;
+  return {ok_id:okUserId,full_name:firstName+' '+lastName,avatar_url:getOKAvatarUrl(okUserId,firstName,lastName),location:'Одноклассники'};
 }
 
-// --- Обновление интерфейса ---
+// ======== Интерфейс ========
 function updateUserInterface(user){
-    currentUser=user;
-    document.getElementById('user-name').textContent=user.full_name;
-    document.getElementById('user-avatar').src=user.avatar_url;
-    document.getElementById('user-location').textContent='📍 '+(user.location||'Одноклассники');
-    document.getElementById('connection-status').innerHTML=`<div class="status-dot" style="background:#EE8C3A"></div><span>Подключено к OK.ru</span>`;
+  currentUser=user;
+  document.getElementById('user-name').textContent=user.full_name;
+  document.getElementById('user-avatar').src=user.avatar_url;
+  document.getElementById('user-location').textContent='📍 '+user.location;
+  document.getElementById('connection-status').innerHTML=`<div class="status-dot" style="background:#EE8C3A"></div><span>Подключено к OK.ru</span>`;
 }
 
-// --- Загрузка сообщений и подписка в реальном времени ---
+// ======== Сообщения Realtime ========
 async function loadOceanMessages(){
-    const { data:errorData, error } = await db.from('messages').select('*').order('created_at',{ascending:false}).limit(3);
-    if(error) return console.error(error);
-    const display=document.getElementById('message-display');
-    display.innerHTML='';
-    if(errorData) errorData.forEach(msg=>showMessageInOcean(msg,false));
+  const { data,error }=await db.from('messages').select('*').order('created_at',{ascending:false}).limit(3);
+  if(error)console.error(error);
+  const display=document.getElementById('message-display');display.innerHTML='';
+  if(data)data.forEach(msg=>showMessageInOcean(msg,false));
 
-    // Подписка Realtime
-    db.channel('messages_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload=>{
-          if(payload.eventType==='INSERT') showMessageInOcean(payload.new,true);
-      })
-      .subscribe();
+  db.channel('messages_channel')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>showMessageInOcean(payload.new,true))
+    .subscribe();
 }
 
-function showMessageInOcean(message,isCaught=false){
-    const display=document.getElementById('message-display');
-    const time=new Date(message.created_at).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-    const html=`<div class="message-bubble"><div class="message-content">"${message.content}"</div><div class="message-meta"><span>${isCaught?'🎣 Поймано из OK.ru':'🌊 В океане OK.ru'}</span><span>${time}</span></div></div>`;
-    display.innerHTML=html+display.innerHTML;
-    const bubbles=display.querySelectorAll('.message-bubble'); if(bubbles.length>5)bubbles[bubbles.length-1].remove();
+function showMessageInOcean(msg,isCaught=false){
+  const display=document.getElementById('message-display');
+  const time=new Date(msg.created_at).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const html=`<div class="message-bubble"><div class="message-content">"${msg.content}"</div><div class="message-meta"><span>${isCaught?'🎣 Поймано':'🌊 В океане'}</span><span>${time}</span></div></div>`;
+  display.innerHTML=html+display.innerHTML;
+  const bubbles=display.querySelectorAll('.message-bubble');if(bubbles.length>5)bubbles[bubbles.length-1].remove();
 }
 
-// --- Отправка сообщений ---
+// ======== Отправка ========
 async function sendMessage(){
-    const text=document.getElementById('messageInput').value.trim();
-    if(!text){showNotification('Введите текст послания','warning');return;}
-    const messageData={content:text,sender_ok_id:currentUser.ok_id,sender_name:currentUser.full_name,sender_avatar:currentUser.avatar_url,is_anonymous:true,created_at:new Date().toISOString()};
-    const { data,error } = await db.from('messages').insert(messageData).select().single();
-    if(error){showNotification('Ошибка отправки','error');console.error(error);return;}
-    document.getElementById('messageInput').value='';
-    hideModal('sendMessageModal');
-    showNotification('✅ Послание брошено в океан!','success');
+  const text=document.getElementById('messageInput').value.trim();
+  if(!text){showNotification('Введите текст послания','warning');return;}
+  const msg={content:text,sender_ok_id:currentUser.ok_id,sender_name:currentUser.full_name,sender_avatar:currentUser.avatar_url,is_anonymous:true,created_at:new Date().toISOString()};
+  const { data,error }=await db.from('messages').insert(msg).select().single();
+  if(error){showNotification('Ошибка отправки','error');console.error(error);return;}
+  document.getElementById('messageInput').value='';
+  hideModal('sendMessageModal');
+  showNotification('✅ Послание брошено в океан!','success');
 }
 
-// --- Вспомогательные функции ---
+// ======== Вспомогательные ========
 function showSendMessage(){document.getElementById('sendMessageModal').style.display='flex';document.getElementById('messageInput').focus();}
 function hideModal(id){document.getElementById(id).style.display='none';}
 function showAbout(){showNotification('🌊 ВМесте - приложение для OK.ru','ok');}
 function refreshProfile(){showNotification('Профиль обновлен','success');}
 
-// --- Инициализация ---
-document.addEventListener('DOMContentLoaded',async ()=>{
-    updateLoadingStatus('Подключение к OK.ru...');
-    const user=getOKUserData();
-    if(!user){updateLoadingStatus('Ошибка: пользователь не найден');return;}
-    updateUserInterface(user);
-    await loadOceanMessages();
-    showApp();
+// ======== Инициализация ========
+document.addEventListener('DOMContentLoaded',async()=>{
+  updateLoadingStatus('Подключение к OK.ru...');
+  const user=getOKUserData();
+  if(!user){updateLoadingStatus('Ошибка: пользователь не найден');return;}
+  updateUserInterface(user);
+  await loadOceanMessages();
+  showApp();
 });
 </script>
 </body>
