@@ -120,13 +120,14 @@ function waitForOKSDK(timeout = 6000) {
     return new Promise((resolve, reject) => {
         const start = Date.now();
 
-        if (window.OK && typeof OK.api === 'function') {
-    OK.api('users.getCurrentUser', {}, profile => {
-        console.log(profile);
-    });
-} else {
-    console.warn('OK SDK пока недоступен — запустите приложение через ok.ru/game');
-}
+        (function check() {
+            if (window.OK && typeof OK.api === 'function') {
+                resolve();
+            } else if (Date.now() - start > timeout) {
+                reject(new Error('OK SDK не загрузился'));
+            } else {
+                requestAnimationFrame(check);
+            }
         })();
     });
 }
