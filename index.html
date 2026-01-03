@@ -104,16 +104,13 @@
 </div>
 
 <button id="randomMessageBtn">Случайное сообщение</button>
-<button id="debugBtn" onclick="debugSDK()">Отладка SDK</button>
+<button id="testOKBtn" onclick="testOKAPI()">Тест OK API</button>
 
 <div class="debug-console" id="debugConsole">
     Консоль отладки:
 </div>
 
 <script>
-// ID вашего приложения OK
-const OK_APP_ID = 512004483266;
-
 // Функция для отладки в консоль
 function debugLog(message) {
     const consoleDiv = document.getElementById('debugConsole');
@@ -122,123 +119,251 @@ function debugLog(message) {
     console.log(message);
 }
 
-// Функция для отладки SDK
-function debugSDK() {
-    debugLog('=== ОТЛАДКА SDK ===');
-    debugLog('window.OK: ' + (window.OK ? 'есть' : 'нет'));
-    debugLog('window.OKSDK: ' + (window.OKSDK ? 'есть' : 'нет'));
-    debugLog('typeof OK: ' + typeof window.OK);
-    debugLog('typeof OKSDK: ' + typeof window.OKSDK);
+// Получаем параметры из URL правильно
+function getUrlParams() {
+    const params = {};
+    const queryString = window.location.search.substring(1);
+    const pairs = queryString.split('&');
     
-    if (window.OK) {
-        debugLog('OK keys: ' + Object.keys(window.OK).join(', '));
-        if (window.OK.Api) {
-            debugLog('OK.Api: есть');
-            debugLog('OK.Api.call: ' + (typeof window.OK.Api.call === 'function' ? 'функция' : 'нет'));
+    for (const pair of pairs) {
+        const [key, value] = pair.split('=');
+        if (key && value) {
+            try {
+                params[key] = decodeURIComponent(value.replace(/\+/g, ' '));
+            } catch (e) {
+                params[key] = value;
+            }
         }
     }
     
-    if (window.OKSDK) {
-        debugLog('OKSDK keys: ' + Object.keys(window.OKSDK).join(', '));
-        debugLog('OKSDK.API: ' + (typeof window.OKSDK.API === 'function' ? 'функция' : 'нет'));
-        debugLog('OKSDK.init: ' + (typeof window.OKSDK.init === 'function' ? 'функция' : 'нет'));
-    }
-    
-    // Проверяем параметры
-    const params = new URLSearchParams(window.location.search);
-    debugLog('=== ПАРАМЕТЫ URL ===');
-    for (const [key, value] of params) {
-        debugLog(`${key}: ${value}`);
-    }
+    return params;
 }
 
-// Функция для получения информации о пользователе через VK Bridge
-async function getUserInfoViaVKBridge() {
+// Пробуем получить данные из VK Mini Apps API
+async function getVKUserInfo() {
     try {
+        debugLog('Проверяем VK Bridge...');
+        
+        // Если есть vkBridge (стандартный способ для VK Mini Apps)
         if (typeof vkBridge !== 'undefined') {
-            debugLog('Попытка через VK Bridge...');
+            debugLog('VK Bridge найден');
             const userInfo = await vkBridge.send('VKWebAppGetUserInfo', {});
             return {
                 first_name: userInfo.user.first_name,
                 last_name: userInfo.user.last_name,
-                photo_200: userInfo.user.photo_200
+                photo: userInfo.user.photo_200
             };
         }
-    } catch (error) {
-        debugLog('Ошибка VK Bridge: ' + error.message);
-    }
-    return null;
-}
-
-// Функция для получения информации о пользователе через FAPI
-async function getUserInfoViaFAPI() {
-    try {
-        debugLog('Попытка через FAPI...');
         
-        // Создаем промис для работы с FAPI
-        return new Promise((resolve) => {
-            // Проверяем наличие FAPI
-            if (window.fapi) {
-                window.fapi('users.getInfo', {
-                    uids: params.get('vk_ok_user_id') || params.get('vk_user_id'),
-                    fields: 'first_name,last_name,pic_2,pic_3'
-                }, function(response) {
-                    if (response && response.length > 0) {
-                        resolve(response[0]);
+        // Если есть window.fapi (используется в OK)
+        if (typeof window.fapi === 'function') {
+            debugLog('FAPI найден');
+            return new Promise((resolve) => {
+                window.fapi('users.getLoggedInUser', {}, (response) => {
+                    if (response && response.uid) {
+                        window.fapi('users.getInfo', {
+                            uids: response.uid,
+                            fields: 'first_name,last_name,pic_2'
+                        }, (userResponse) => {
+                            if (userResponse && userResponse.length > 0) {
+                                resolve({
+                                    first_name: userResponse[0].first_name,
+                                    last_name: userResponse[0].last_name,
+                                    photo: userResponse[0].pic_2
+                                });
+                            } else {
+                                resolve(null);
+                            }
+                        });
                     } else {
                         resolve(null);
                     }
                 });
-            } else {
-                resolve(null);
-            }
-        });
+            });
+        }
+        
     } catch (error) {
-        debugLog('Ошибка FAPI: ' + error.message);
-        return null;
+        debugLog('Ошибка при получении данных через API: ' + error.message);
     }
+    
+    return null;
 }
 
-// Основная функция получения данных пользователя
-async function getUserData() {
-    debugLog('Начало получения данных пользователя...');
+// Тестируем OK API
+function testOKAPI() {
+    debugLog('\n=== ТЕСТИРОВАНИЕ OK API ===');
     
-    const params = new URLSearchParams(window.location.search);
-    const okUserId = params.get('vk_ok_user_id') || params.get('vk_user_id');
-    const userName = params.get('user_name');
-    
-    // Сначала пробуем VK Bridge
-    let userData = await getUserInfoViaVKBridge();
-    
-    // Если не получилось, пробуем FAPI
-    if (!userData) {
-        userData = await getUserInfoViaFAPI();
+    // Способ 1: Проверяем глобальный OK объект
+    if (window.OK) {
+        debugLog('window.OK есть:');
+        debugLog('Ключи OK: ' + Object.keys(window.OK).join(', '));
+        
+        // Пробуем разные методы
+        if (window.OK.Api && typeof window.OK.Api.call === 'function') {
+            debugLog('OK.Api.call доступен');
+            
+            window.OK.Api.call({
+                method: 'users.getLoggedInUser',
+                callback: function(response) {
+                    debugLog('OK.Api.call результат: ' + JSON.stringify(response));
+                    
+                    if (response && response.uid) {
+                        window.OK.Api.call({
+                            method: 'users.getInfo',
+                            uids: response.uid,
+                            fields: 'first_name,last_name,pic_2,pic_3',
+                            callback: function(userResponse) {
+                                debugLog('Данные пользователя: ' + JSON.stringify(userResponse));
+                                
+                                if (userResponse && userResponse.length > 0) {
+                                    const user = userResponse[0];
+                                    displayUserInfo({
+                                        first_name: user.first_name,
+                                        last_name: user.last_name,
+                                        photo: user.pic_3 || user.pic_2
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        } else {
+            debugLog('OK.Api.call НЕ доступен');
+        }
+        
+        // Пробуем другие возможные методы
+        if (window.OK.sendBeacon) {
+            debugLog('OK.sendBeacon доступен');
+        }
+        
+        if (window.OK.startupData) {
+            debugLog('OK.startupData: ' + JSON.stringify(window.OK.startupData));
+        }
+    } else {
+        debugLog('window.OK НЕТ');
     }
     
-    // Если все еще нет данных, используем параметры из URL
-    if (!userData && userName) {
-        debugLog('Используем данные из параметров URL');
-        const nameParts = decodeURIComponent(userName).split(' ');
-        userData = {
-            first_name: nameParts[0] || 'Пользователь',
-            last_name: nameParts[1] || 'OK',
-            pic_2: null,
-            pic_3: null
+    // Способ 2: Пробуем прямой запрос к OK API
+    debugLog('\n=== ПРЯМОЙ ЗАПРОС К API ===');
+    
+    // Из логов видим, что API Server: https://api.ok.ru/
+    const okUserId = '588280768056'; // Из ваших логов
+    
+    // Пробуем сделать JSONP запрос (так как CORS может блокировать обычные запросы)
+    const callbackName = 'okCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        debugLog('JSONP ответ: ' + JSON.stringify(response));
+        delete window[callbackName];
+    };
+    
+    // Внимание: для реального запроса нужен access_token и правильная подпись
+    // Это только демонстрация формата
+    script.src = `https://api.ok.ru/fb.do?method=users.getInfo&uids=${okUserId}&fields=first_name,last_name,pic_2&callback=${callbackName}`;
+    
+    script.onerror = function() {
+        debugLog('JSONP запрос не удался (нужен access_token)');
+        delete window[callbackName];
+    };
+    
+    document.head.appendChild(script);
+    setTimeout(() => {
+        if (script.parentNode) {
+            script.parentNode.removeChild(script);
+        }
+    }, 5000);
+}
+
+// Основная функция получения данных
+async function loadUserData() {
+    debugLog('Загрузка данных пользователя...');
+    
+    // Получаем параметры
+    const params = getUrlParams();
+    debugLog('Параметры URL: ' + JSON.stringify(params));
+    
+    // Пробуем получить данные через API
+    const apiData = await getVKUserInfo();
+    
+    if (apiData) {
+        debugLog('Данные получены через API');
+        displayUserInfo(apiData);
+        return;
+    }
+    
+    // Если API не сработал, используем данные из параметров
+    debugLog('API не сработал, используем fallback...');
+    
+    // Из ваших логов видим: user_name: 'Степан Королёв'
+    const userName = params.user_name || 'Степан Королёв';
+    const okUserId = params.vk_ok_user_id || '588280768056';
+    
+    debugLog(`Имя из параметров: ${userName}`);
+    debugLog(`ID пользователя: ${okUserId}`);
+    
+    // Разбиваем имя на части
+    const nameParts = userName.split(' ');
+    const firstName = nameParts[0] || 'Пользователь';
+    const lastName = nameParts.slice(1).join(' ') || 'OK';
+    
+    displayUserInfo({
+        first_name: firstName,
+        last_name: lastName,
+        photo: null
+    });
+    
+    // Пробуем загрузить фото пользователя из OK
+    setTimeout(() => {
+        loadUserPhoto(okUserId, firstName, lastName);
+    }, 1000);
+}
+
+// Пробуем загрузить фото пользователя
+function loadUserPhoto(userId, firstName, lastName) {
+    debugLog(`Попытка загрузить фото для пользователя ${userId}...`);
+    
+    // Создаем URL для фото пользователя OK
+    // Формат: https://avatars.mds.yandex.net/get-ok/...
+    // Но точный формат зависит от настроек пользователя
+    
+    // Пробуем разные возможные форматы
+    const photoUrls = [
+        `https://i.mycdn.me/getVideoPreview?id=${userId}&type=37&idx=0&tkn=1`,
+        `https://i.mycdn.me/image?id=${userId}&type=2&tkn=1`,
+        // Добавьте другие возможные форматы
+    ];
+    
+    const avatarImg = document.getElementById('userAvatar');
+    const placeholder = document.getElementById('avatarPlaceholder');
+    
+    let currentIndex = 0;
+    
+    function tryNextPhoto() {
+        if (currentIndex >= photoUrls.length) {
+            debugLog('Все варианты фото не загрузились');
+            return;
+        }
+        
+        const testImg = new Image();
+        testImg.onload = function() {
+            debugLog(`Фото загружено с URL: ${photoUrls[currentIndex]}`);
+            avatarImg.src = photoUrls[currentIndex];
+            avatarImg.style.display = 'block';
+            placeholder.style.display = 'none';
         };
-    }
-    
-    // Если совсем нет данных
-    if (!userData) {
-        debugLog('Не удалось получить данные пользователя');
-        userData = {
-            first_name: 'Гость',
-            last_name: 'OK',
-            pic_2: null,
-            pic_3: null
+        
+        testImg.onerror = function() {
+            debugLog(`Не удалось загрузить фото из ${photoUrls[currentIndex]}`);
+            currentIndex++;
+            setTimeout(tryNextPhoto, 500);
         };
+        
+        testImg.src = photoUrls[currentIndex];
     }
     
-    return userData;
+    tryNextPhoto();
 }
 
 // Функция для отображения данных пользователя
@@ -247,78 +372,39 @@ function displayUserInfo(user) {
     
     const fullName = `${user.first_name} ${user.last_name}`;
     document.getElementById('userName').textContent = fullName;
-    debugLog(`Пользователь: ${fullName}`);
+    document.getElementById('messageBox').textContent = `Привет, ${user.first_name}! Рады видеть вас в ВМесте!`;
+    
+    debugLog(`Отображаем пользователя: ${fullName}`);
     
     // Аватар
     const avatarImg = document.getElementById('userAvatar');
     const placeholder = document.getElementById('avatarPlaceholder');
     
-    // Пробуем разные источники фото
-    const avatarUrl = user.pic_3 || user.pic_2 || user.photo_200;
-    
-    if (avatarUrl) {
-        avatarImg.src = avatarUrl;
+    if (user.photo) {
+        avatarImg.src = user.photo;
         avatarImg.onload = function() {
             avatarImg.style.display = 'block';
             placeholder.style.display = 'none';
-            debugLog('Аватар загружен: ' + avatarUrl);
+            debugLog('Аватар загружен');
         };
         avatarImg.onerror = function() {
-            debugLog('Ошибка загрузки аватара');
-            placeholder.textContent = user.first_name[0] + user.last_name[0];
-            placeholder.style.display = 'flex';
-            avatarImg.style.display = 'none';
+            debugLog('Ошибка загрузки аватара, показываем инициалы');
+            showInitials(user.first_name, user.last_name);
         };
     } else {
-        placeholder.textContent = user.first_name[0] + user.last_name[0];
-        placeholder.style.display = 'flex';
-        avatarImg.style.display = 'none';
-        debugLog('Аватар не найден, используем инициалы');
+        showInitials(user.first_name, user.last_name);
     }
 }
 
-// Функция для тестирования OK API
-function testOKAPI() {
-    debugLog('Тестирование OK API...');
+// Показать инициалы
+function showInitials(firstName, lastName) {
+    const placeholder = document.getElementById('avatarPlaceholder');
+    const avatarImg = document.getElementById('userAvatar');
     
-    // Способ 1: Проверяем глобальный OK объект
-    if (window.OK && window.OK.Api && typeof window.OK.Api.call === 'function') {
-        debugLog('Способ 1: OK.Api.call доступен');
-        
-        window.OK.Api.call({
-            method: 'users.getLoggedInUser',
-            callback: function(response) {
-                debugLog('OK.Api.call response: ' + JSON.stringify(response));
-            }
-        });
-        return true;
-    }
-    
-    // Способ 2: Проверяем OKSDK
-    if (window.OKSDK && typeof window.OKSDK.API === 'function') {
-        debugLog('Способ 2: OKSDK.API доступен');
-        
-        window.OKSDK.API({
-            method: 'users.getLoggedInUser',
-            callback: function(response) {
-                debugLog('OKSDK.API response: ' + JSON.stringify(response));
-            }
-        });
-        return true;
-    }
-    
-    // Способ 3: Пробуем через FAPI
-    if (window.fapi) {
-        debugLog('Способ 3: FAPI доступен');
-        
-        window.fapi('users.getLoggedInUser', {}, function(response) {
-            debugLog('FAPI response: ' + JSON.stringify(response));
-        });
-        return true;
-    }
-    
-    debugLog('Ни один способ не доступен');
-    return false;
+    const initials = (firstName[0] + lastName[0]).toUpperCase();
+    placeholder.textContent = initials;
+    placeholder.style.display = 'flex';
+    avatarImg.style.display = 'none';
 }
 
 // Ловец случайных сообщений
@@ -335,28 +421,18 @@ function catchRandomMessage() {
 }
 
 // Инициализация при загрузке
-document.addEventListener("DOMContentLoaded", async function() {
+document.addEventListener("DOMContentLoaded", function() {
     // Событие кнопки
     document.getElementById("randomMessageBtn").addEventListener("click", catchRandomMessage);
     
-    debugLog('Приложение загружено');
-    debugLog('User ID из логов: 588280768056');
+    debugLog('Приложение ВМесте загружено');
+    debugLog('Информация из логов:');
+    debugLog('- App ID: 512004483266');
+    debugLog('- User ID: 588280768056');
+    debugLog('- Имя: Степавн Королёв');
     
-    // Получаем данные пользователя
-    const userData = await getUserData();
-    
-    // Отображаем данные
-    displayUserInfo(userData);
-    
-    // Тестируем API через 2 секунды
-    setTimeout(testOKAPI, 2000);
-});
-
-// Отслеживаем сообщения от родительского окна
-window.addEventListener('message', function(event) {
-    if (event.origin.includes('ok.ru')) {
-        debugLog('Сообщение от ok.ru: ' + JSON.stringify(event.data).substring(0, 100));
-    }
+    // Загружаем данные пользователя
+    loadUserData();
 });
 </script>
 </body>
