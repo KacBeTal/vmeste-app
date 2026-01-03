@@ -131,7 +131,10 @@
 <script>
 const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+if (typeof supabase === 'undefined') {
+    supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+
 
 let currentUser = null;
 
