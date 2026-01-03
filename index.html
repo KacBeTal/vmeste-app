@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ВМесте 🌊 | Океан посланий из OK.ru</title>
+<title>ВМесте 🌊 | OK.ru</title>
 
 <!-- Supabase -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -143,7 +143,7 @@ border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margi
 </div>
 
 <script>
-// ================== Конфигурация Supabase ==================
+// ================== Supabase ==================
 const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -155,7 +155,7 @@ function updateLoadingStatus(msg){document.getElementById('loading-status').text
 function showApp(){document.getElementById('loading').style.display='none';document.getElementById('app-container').style.display='block';}
 function showNotification(msg,type='success'){const n=document.createElement('div');n.className='notification';n.textContent=msg;
 n.style.background= type==='success'? '#50E3C2': type==='error'? '#FF6B8B': '#FFA500'; document.body.appendChild(n);
-setTimeout(()=>{n.style.animation='slideOut 0.3s ease';setTimeout(()=>n.remove(),300)},3000);}
+setTimeout(()=>{n.style.animation='slideOut 0.3s ease';setTimeout(()=>n.remove(),300)},300);}
 function showMessageInOcean(message,isCaught=false){
   const display=document.getElementById('message-display');
   const time=new Date(message.created_at).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
@@ -168,15 +168,20 @@ function hideModal(id){document.getElementById(id).style.display='none';}
 function showAbout(){showNotification('🌊 ВМесте - для пользователей OK.ru','ok');}
 function refreshProfile(){loadUserStats();loadOnlineCount();showNotification('Профиль обновлен','success');}
 
-// ================== Получение данных OK ==================
+// ================== OK OAuth ==================
 async function getOKUserData(){
-  const params=new URLSearchParams(window.location.search);
-  const okUserId=params.get('vk_ok_user_id');
-  if(!okUserId) return null;
-
-  const response=await fetch(`https://api.ok.ru/fb.do?method=users.getCurrentUser&application_key=512004483266&format=json`);
-  const data=await response.json().catch(()=>({first_name:'Пользователь',last_name:'OK.ru',uid:okUserId,pic_1:''}));
-  return {ok_id:data.uid||okUserId,full_name:(data.first_name||'Пользователь')+' '+(data.last_name||'OK.ru'),avatar_url:data.pic_3||data.pic_1||`https://ui-avatars.com/api/?name=${encodeURIComponent(data.first_name+' '+data.last_name)}&background=EE8C3A&color=fff&size=200`};
+  updateLoadingStatus('Подключение к OK.ru через OAuth...');
+  try{
+    const params=new URLSearchParams(window.location.search);
+    const okToken=params.get('ok_access_token'); // OAuth токен
+    if(!okToken) throw new Error('Токен отсутствует');
+    const resp = await fetch(`https://api.ok.ru/fb.do?method=users.getCurrentUser&access_token=${okToken}&application_key=512004483266&format=json`);
+    const data = await resp.json();
+    return {ok_id:data.uid,full_name:data.first_name+' '+data.last_name,avatar_url:data.pic_3||data.pic_1};
+  }catch(e){
+    console.error(e);
+    return {ok_id:'guest',full_name:'Гость OK.ru',avatar_url:'https://ui-avatars.com/api/?name=Гость+OK&background=EE8C3A&color=fff&size=200'};
+  }
 }
 
 // ================== Статистика ==================
@@ -208,8 +213,6 @@ async function catchRandomMessage(){
   const { data,error } = await db.from('messages').select('*').order('random()').limit(1).single();
   if(error||!data){showNotification('Нет посланий для поимки','error');return;}
   showMessageInOcean(data,true);
-  showNotification('🎣 Вы поймали послание!','success');
-  // Отметим пользователя
   await db.from('messages').update({caught_by:currentUser.ok_id}).eq('id',data.id);
   loadUserStats();
 }
