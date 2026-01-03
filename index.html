@@ -3,146 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ВМесте 🌊 | Океан посланий из OK.ru</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<title>ВМесте Mini App</title>
 <style>
-:root {
-  --primary:#4A90E2;--secondary:#50E3C2;--dark:#1A1A2E;--light:#F8F9FA;--accent:#FF6B8B;--ok-orange:#EE8C3A;
-}
-body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif; background: linear-gradient(135deg,#0F2027,#203A43,#2C5364); color: var(--light); margin:0; padding:20px; }
-.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
-.logo h1 { font-size:28px; background: linear-gradient(45deg,var(--ok-orange),var(--primary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.status-dot { width:8px; height:8px; border-radius:50%; background:var(--ok-orange); animation:pulse 2s infinite; }
-@keyframes pulse {0%,100%{opacity:1;}50%{opacity:0.5;}}
-.main-layout { display:grid; grid-template-columns:300px 1fr 300px; gap:25px; }
-@media(max-width:1024px){.main-layout{grid-template-columns:1fr;}}
-.profile-card, .info-panel { background: rgba(255,255,255,0.05); backdrop-filter:blur(10px); border-radius:20px; padding:25px; border:1px solid rgba(255,255,255,0.1); }
-.profile-header { display:flex; align-items:center; gap:15px; margin-bottom:20px; }
-.avatar { width:70px; height:70px; border-radius:50%; border:3px solid var(--ok-orange); object-fit:cover; }
-.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin:20px 0; }
-.stat-item { text-align:center; padding:12px; background: rgba(255,255,255,0.05); border-radius:12px; }
-.stat-value { font-size:24px; font-weight:bold; color: var(--ok-orange); }
-.ocean-section { background: rgba(255,255,255,0.03); border-radius:25px; padding:30px; border:2px solid rgba(238,140,58,0.2); overflow:hidden; }
-.message-bubble { background: rgba(255,255,255,0.1); border-radius:20px; padding:25px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.1); transition: transform 0.3s ease; }
-.message-bubble:hover { transform:translateY(-5px); background:rgba(255,255,255,0.15); }
-.btn { padding:16px 24px; border:none; border-radius:15px; font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:all 0.3s ease;}
-.btn-primary { background: linear-gradient(45deg,var(--ok-orange),var(--primary)); color:white; }
-.btn-primary:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(238,140,58,0.3); }
-.btn-secondary { background: rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); }
-.btn-secondary:hover { background: rgba(255,255,255,0.2); }
-.notification { position:fixed; top:20px; right:20px; background:var(--ok-orange); color:var(--dark); padding:15px 20px; border-radius:10px; z-index:9999; animation:slideIn 0.3s ease; font-weight:500; }
-@keyframes slideIn { from {transform:translateX(100%); opacity:0;} to {transform:translateX(0); opacity:1;} }
-@keyframes slideOut { from {transform:translateX(0); opacity:1;} to {transform:translateX(100%); opacity:0;} }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f0f2f5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+    }
+    .user-card {
+        background: #fff;
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .user-card img {
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border: 2px solid #0078ff;
+    }
+    .user-card h2 {
+        margin: 0;
+        font-size: 1.5em;
+        color: #333;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 1em;
+        border-radius: 8px;
+        border: none;
+        background-color: #0078ff;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    button:hover {
+        background-color: #005bb5;
+    }
+    .message-box {
+        background: #fff;
+        padding: 15px 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+    }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo"><h1>ВМесте 🌊</h1></div>
-  <div class="status"><div class="status-dot"></div><span>OK.ru</span></div>
+<div class="user-card">
+    <img id="userAvatar" src="" alt="Avatar">
+    <h2 id="userName">Загрузка...</h2>
 </div>
 
-<div class="main-layout">
-  <aside class="profile-card">
-    <div class="profile-header">
-      <img src="" alt="Avatar" class="avatar" id="user-avatar">
-      <div>
-        <h3 id="user-name">Загрузка...</h3>
-      </div>
-    </div>
-    <div class="stats-grid">
-      <div class="stat-item"><div class="stat-value" id="sent-count">0</div><div class="stat-label">Отправлено</div></div>
-      <div class="stat-item"><div class="stat-value" id="caught-count">0</div><div class="stat-label">Поймано</div></div>
-      <div class="stat-item"><div class="stat-value" id="likes-count">0</div><div class="stat-label">Лайков</div></div>
-      <div class="stat-item"><div class="stat-value" id="days-count">1</div><div class="stat-label">Дней в OK</div></div>
-    </div>
-    <div style="display:grid; gap:10px; margin-top:20px;">
-      <button class="btn btn-secondary" onclick="refreshProfile()">🔄 Обновить</button>
-    </div>
-  </aside>
-
-  <section class="ocean-section">
-    <h2>🌊 Океан посланий OK.ru</h2>
-    <div style="margin-bottom:20px;">
-      <span>👥 Онлайн: </span><span id="online-count">0</span>
-    </div>
-    <div style="display:grid; gap:10px; margin-bottom:20px;">
-      <button class="btn btn-primary" onclick="showSendMessage()">✍️ Бросить послание</button>
-      <button class="btn btn-primary" onclick="catchRandomMessage()">🎣 Поймать послание</button>
-    </div>
-    <div id="message-display"></div>
-  </section>
-
-  <aside class="info-panel">
-    <h3>📊 О приложении</h3>
-    <p>Эксклюзивно для пользователей OK.ru</p>
-    <p>Анонимные послания и случайные ловли от других пользователей.</p>
-  </aside>
+<div class="message-box" id="messageBox">
+    Добро пожаловать в приложение!
 </div>
 
-<div id="sendMessageModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
-  <div style="background:var(--dark); padding:30px; border-radius:20px; width:90%; max-width:500px; border:2px solid var(--ok-orange);">
-    <h3 style="color:var(--ok-orange); margin-bottom:20px;">✍️ Бросить послание</h3>
-    <textarea id="messageInput" placeholder="Ваше послание..." style="width:100%; height:150px; padding:15px; border-radius:12px; background: rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2);"></textarea>
-    <div style="display:flex; gap:10px; margin-top:20px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="sendMessage()">🌊 Отправить</button>
-      <button class="btn btn-secondary" style="flex:1;" onclick="hideModal('sendMessageModal')">Отмена</button>
-    </div>
-  </div>
-</div>
+<button id="randomMessageBtn">Случайное сообщение</button>
 
+<script src="https://connect.ok.ru/connect.js" type="text/javascript"></script>
 <script>
-// --- Supabase ---
-const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
-const supabaseClient = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const YOUR_OK_APP_ID = 512004483266; // Замените на ваш App ID OK.ru
 
-// --- Данные пользователя берем из query-параметров ---
-const params = new URLSearchParams(window.location.search);
-const currentUser = {
-  ok_id: params.get('vk_ok_user_id'),
-  full_name: params.get('user_name'),
-  avatar_url: `https://i.mycdn.me/i?r=AZr9iF4BvQh5iC87l1C7n8ZJZ94pGjHhXFOvjKm9Vy3G&t=2&f=2&fn=user${params.get('vk_ok_user_id')}`
-};
+function initOKUser() {
+    if (typeof OKSDK === "undefined") {
+        console.error("OKSDK не загружен!");
+        return;
+    }
 
-function showNotification(msg){ const n=document.createElement('div'); n.className='notification'; n.textContent=msg; document.body.appendChild(n); setTimeout(()=>{ n.style.animation='slideOut 0.3s ease'; setTimeout(()=>n.remove(),300); },3000); }
-function hideModal(id){document.getElementById(id).style.display='none';}
-function showSendMessage(){document.getElementById('sendMessageModal').style.display='flex'; document.getElementById('messageInput').focus();}
+    OKSDK.init({
+        apiId: YOUR_OK_APP_ID,
+        onLoad: function() {
+            console.log("OKSDK успешно инициализирован");
 
-function showApp(){ document.querySelector('#user-name').textContent=currentUser.full_name; document.querySelector('#user-avatar').src=currentUser.avatar_url; }
-
-async function sendMessage(){
-  const txt=document.getElementById('messageInput').value.trim(); if(!txt){showNotification('Введите текст'); return;}
-  const data={content:txt,sender_ok_id:currentUser.ok_id,sender_name:currentUser.full_name,sender_avatar:currentUser.avatar_url,is_anonymous:true,created_at:new Date().toISOString()};
-  const {error}=await supabaseClient.from('messages').insert(data);
-  if(error){showNotification('Ошибка отправки'); return;}
-  document.getElementById('messageInput').value=''; hideModal('sendMessageModal'); showNotification('✅ Послание отправлено'); loadOceanMessages(); loadUserStats();
+            OKSDK.API("users.getCurrentUser", function(response) {
+                if(response.error){
+                    console.error("Ошибка получения пользователя:", response.error);
+                    document.getElementById("userName").textContent = "Гость OK.ru";
+                } else {
+                    console.log("Пользователь:", response);
+                    document.getElementById("userName").textContent = response.name;
+                    document.getElementById("userAvatar").src = response.pic_1;
+                }
+            });
+        }
+    });
 }
 
-async function catchRandomMessage(){
-  const {data:msgs}=await supabaseClient.from('messages').select('*').neq('sender_ok_id',currentUser.ok_id).eq('is_anonymous',true).limit(10);
-  if(!msgs || msgs.length===0){showNotification('Океан пуст'); return;}
-  const msg=msgs[Math.floor(Math.random()*msgs.length)];
-  const display=document.getElementById('message-display');
-  const time=new Date(msg.created_at).toLocaleString();
-  display.innerHTML=`<div class="message-bubble"><div class="message-content">"${msg.content}"</div><div class="message-meta">🎣 Поймано - ${time}</div></div>`+display.innerHTML;
-  const caughtCount=parseInt(document.getElementById('caught-count').textContent)||0; document.getElementById('caught-count').textContent=caughtCount+1;
+// Ловец случайных сообщений
+function catchRandomMessage() {
+    const messages = [
+        "Привет! Как дела?",
+        "Сегодня отличный день!",
+        "Не забудь улыбнуться :)",
+        "Вместе мы можем больше!",
+        "Удачи тебе в делах!"
+    ];
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    document.getElementById("messageBox").textContent = msg;
 }
 
-async function loadOceanMessages(){
-  const {data:msgs}=await supabaseClient.from('messages').select('*').eq('is_anonymous',true).order('created_at',{ascending:false}).limit(5);
-  const display=document.getElementById('message-display'); display.innerHTML='';
-  if(msgs) msgs.forEach(msg=>{ const time=new Date(msg.created_at).toLocaleString(); display.innerHTML+=`<div class="message-bubble"><div class="message-content">"${msg.content}"</div><div class="message-meta">🌊 ${time}</div></div>`; });
-}
+// Событие кнопки
+document.getElementById("randomMessageBtn").addEventListener("click", catchRandomMessage);
 
-async function loadUserStats(){
-  const {data:msgs}=await supabaseClient.from('messages').select('*').eq('sender_ok_id',currentUser.ok_id);
-  document.getElementById('sent-count').textContent=msgs?msgs.length:0;
-}
-
-function refreshProfile(){ showNotification('Профиль обновлен'); loadUserStats(); loadOceanMessages(); }
-
-document.addEventListener('DOMContentLoaded',()=>{ showApp(); loadUserStats(); loadOceanMessages(); });
+document.addEventListener("DOMContentLoaded", initOKUser);
 </script>
 </body>
 </html>
