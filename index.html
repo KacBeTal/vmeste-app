@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ВМесте 🌊 | Океан посланий из OK.ru</title>
+<script src="https://connect.ok.ru/connect.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 :root {
@@ -102,15 +103,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let currentUser = { ok_id:null, full_name:'', avatar_url:'' };
 
-function getParams() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    ok_id: params.get('vk_ok_user_id'),
-    first_name: params.get('vk_user_first_name') || 'Пользователь',
-    last_name: params.get('vk_user_last_name') || 'OK.ru'
-  };
-}
-
 function showNotification(msg,type='ok') {
   const n=document.createElement('div'); n.className='notification'; n.textContent=msg;
   document.body.appendChild(n); setTimeout(()=>{ n.style.animation='slideOut 0.3s ease'; setTimeout(()=>n.remove(),300); },3000);
@@ -122,7 +114,6 @@ function showApp() {
 }
 
 function hideModal(id){document.getElementById(id).style.display='none';}
-
 function showSendMessage(){document.getElementById('sendMessageModal').style.display='flex'; document.getElementById('messageInput').focus();}
 
 async function sendMessage(){
@@ -163,15 +154,23 @@ async function loadOnlineCount(){
 
 function refreshProfile(){ showNotification('Профиль обновлен','ok'); loadUserStats(); loadOnlineCount(); }
 
-async function initApp(){
-  const p=getParams(); currentUser.ok_id=p.ok_id; currentUser.full_name=`${p.first_name} ${p.last_name}`;
-  currentUser.avatar_url=`https://i.mycdn.me/i?r=AZr9iF4BvQh5iC87l1C7n8ZJZ94pGjHhXFOvjKm9Vy3G&t=2&f=2&fn=user${p.ok_id}`;
-  showApp();
-  showNotification(`Добро пожаловать, ${currentUser.full_name}!`);
-  await loadUserStats(); await loadOceanMessages(); await loadOnlineCount();
+function initOKUser(){
+  OKSDK.init({
+    appId: '512004483266',
+    onLoad: function() {
+      OKSDK.API('users.getCurrentUser', null, function(user){
+        currentUser.ok_id=user.uid;
+        currentUser.full_name=`${user.first_name} ${user.last_name}`;
+        currentUser.avatar_url=user.pic_3 || user.pic_2 || '';
+        showApp();
+        showNotification(`Добро пожаловать, ${currentUser.full_name}!`);
+        loadUserStats(); loadOceanMessages(); loadOnlineCount();
+      });
+    }
+  });
 }
 
-document.addEventListener('DOMContentLoaded',()=>{ initApp(); });
+document.addEventListener('DOMContentLoaded',()=>{ initOKUser(); });
 </script>
 </body>
 </html>
