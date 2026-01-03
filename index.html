@@ -3,231 +3,277 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ВМесте 🌊 | OK.ru</title>
+<title>ВМесте 🌊 | Океан посланий OK.ru</title>
 
 <!-- Supabase -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <style>
-:root {
-  --primary:#4A90E2; --secondary:#50E3C2; --dark:#1A1A2E;
-  --light:#F8F9FA; --accent:#FF6B8B; --ok-orange:#EE8C3A;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-background:linear-gradient(135deg,#0F2027,#203A43,#2C5364);color:var(--light);min-height:100vh;padding:20px;}
-.loading{text-align:center;padding:50px;font-size:18px;}
-.loader{border:4px solid rgba(255,255,255,0.1);border-top:4px solid var(--ok-orange);
-border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:20px auto;}
-@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-.app-container{max-width:1200px;margin:0 auto;display:none;}
-.header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:2px solid rgba(255,255,255,0.1);margin-bottom:30px;}
-.logo{display:flex;align-items:center;gap:15px;}
-.logo h1{font-size:28px;background:linear-gradient(45deg,var(--ok-orange),var(--primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.logo-icon{font-size:36px;animation:wave 3s ease-in-out infinite;}
-@keyframes wave{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
-.main-layout{display:grid;grid-template-columns:300px 1fr 300px;gap:25px;}
-@media (max-width:1024px){.main-layout{grid-template-columns:1fr;}}
-.profile-card{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:20px;padding:25px;border:1px solid rgba(255,255,255,0.1);}
-.profile-header{display:flex;align-items:center;gap:15px;margin-bottom:20px;}
-.avatar{width:70px;height:70px;border-radius:50%;border:3px solid var(--ok-orange);object-fit:cover;}
-.profile-info h3{font-size:20px;margin-bottom:5px;}
-.location{font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:5px;display:flex;align-items:center;gap:5px;}
-.status{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--ok-orange);}
-.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok-orange);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:20px 0;}
-.stat-item{text-align:center;padding:12px;background:rgba(255,255,255,0.05);border-radius:12px;}
-.stat-value{font-size:24px;font-weight:bold;color:var(--ok-orange);}
-.stat-label{font-size:12px;opacity:0.8;margin-top:5px;}
-.ocean-section{background:rgba(255,255,255,0.03);border-radius:25px;padding:30px;border:2px solid rgba(238,140,58,0.2);position:relative;overflow:hidden;}
-.ocean-section::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--ok-orange),var(--primary));}
-.ocean-title{text-align:center;margin-bottom:30px;font-size:24px;}
-.ocean-title span{background:linear-gradient(45deg,var(--ok-orange),var(--primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.message-bubble{background:rgba(255,255,255,0.1);border-radius:20px;padding:25px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);transition:transform 0.3s ease;}
-.message-bubble:hover{transform:translateY(-5px);background:rgba(255,255,255,0.15);}
-.message-content{font-size:18px;line-height:1.6;margin-bottom:15px;font-style:italic;}
-.message-meta{display:flex;justify-content:space-between;font-size:14px;opacity:0.7;}
-.action-buttons{display:grid;gap:15px;margin-top:30px;}
-.btn{padding:16px 24px;border:none;border-radius:15px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;gap:10px;}
-.btn-primary{background:linear-gradient(45deg,var(--ok-orange),var(--primary));color:white;}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(238,140,58,0.3);}
-.btn-secondary{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);}
-.btn-secondary:hover{background:rgba(255,255,255,0.2);}
-.info-panel{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:20px;padding:25px;border:1px solid rgba(255,255,255,0.1);}
-.info-title{color:var(--ok-orange);margin-bottom:20px;font-size:20px;display:flex;align-items:center;gap:10px;}
-.notification{position:fixed;top:20px;right:20px;background:var(--ok-orange);color:var(--dark);padding:15px 20px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.3);z-index:9999;animation:slideIn 0.3s ease;font-weight:500;}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
-@keyframes slideOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(100%);opacity:0;}}
-.ok-badge{display:inline-flex;align-items:center;gap:5px;background:var(--ok-orange);color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;}
-.waves{position:fixed;bottom:0;left:0;right:0;height:100px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");background-size:1200px 100px;animation:waves 15s linear infinite;z-index:-1;}
-@keyframes waves{0%{background-position-x:0;}100%{background-position-x:1200px;}}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+        --primary:#4A90E2; --secondary:#50E3C2; --dark:#1A1A2E;
+        --light:#F8F9FA; --accent:#FF6B8B; --ok-orange:#EE8C3A;
+    }
+    body{
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+        background:linear-gradient(135deg,#0F2027,#203A43,#2C5364);
+        color:var(--light); min-height:100vh; line-height:1.6; padding:20px;
+    }
+    .loading{text-align:center;padding:50px;font-size:18px;}
+    .loader{border:4px solid rgba(255,255,255,0.1);border-top:4px solid var(--ok-orange);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:20px auto;}
+    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    .app-container{max-width:1200px;margin:0 auto;display:none;}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:2px solid rgba(255,255,255,0.1);margin-bottom:30px;}
+    .logo{display:flex;align-items:center;gap:15px;}
+    .logo h1{font-size:28px;background:linear-gradient(45deg,var(--ok-orange),var(--primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .logo-icon{font-size:36px;animation:wave 3s ease-in-out infinite;}
+    @keyframes wave{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+    .main-layout{display:grid;grid-template-columns:300px 1fr 300px;gap:25px;}
+    @media (max-width:1024px){.main-layout{grid-template-columns:1fr;}}
+    .profile-card{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:20px;padding:25px;border:1px solid rgba(255,255,255,0.1);}
+    .profile-header{display:flex;align-items:center;gap:15px;margin-bottom:20px;}
+    .avatar{width:70px;height:70px;border-radius:50%;border:3px solid var(--ok-orange);object-fit:cover;}
+    .profile-info h3{font-size:20px;margin-bottom:5px;}
+    .location{font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+    .status{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--ok-orange);}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok-orange);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:20px 0;}
+    .stat-item{text-align:center;padding:12px;background:rgba(255,255,255,0.05);border-radius:12px;}
+    .stat-value{font-size:24px;font-weight:bold;color:var(--ok-orange);}
+    .stat-label{font-size:12px;opacity:0.8;margin-top:5px;}
+    .ocean-section{background:rgba(255,255,255,0.03);border-radius:25px;padding:30px;border:2px solid rgba(238,140,58,0.2);position:relative;overflow:hidden;}
+    .ocean-title{text-align:center;margin-bottom:30px;font-size:24px;}
+    .ocean-title span{background:linear-gradient(45deg,var(--ok-orange),var(--primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .message-bubble{background:rgba(255,255,255,0.1);border-radius:20px;padding:25px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);transition:transform 0.3s ease;}
+    .message-bubble:hover{transform:translateY(-5px);background:rgba(255,255,255,0.15);}
+    .message-content{font-size:18px;line-height:1.6;margin-bottom:15px;font-style:italic;}
+    .message-meta{display:flex;justify-content:space-between;font-size:14px;opacity:0.7;}
+    .action-buttons{display:grid;gap:15px;margin-top:30px;}
+    .btn{padding:16px 24px;border:none;border-radius:15px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;gap:10px;}
+    .btn-primary{background:linear-gradient(45deg,var(--ok-orange),var(--primary));color:white;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(238,140,58,0.3);}
+    .btn-secondary{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);}
+    .btn-secondary:hover{background:rgba(255,255,255,0.2);}
+    .info-panel{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:20px;padding:25px;border:1px solid rgba(255,255,255,0.1);}
+    .info-title{color:var(--ok-orange);margin-bottom:20px;font-size:20px;display:flex;align-items:center;gap:10px;}
+    .notification{position:fixed;top:20px;right:20px;background:var(--ok-orange);color:var(--dark);padding:15px 20px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.3);z-index:9999;animation:slideIn 0.3s ease;font-weight:500;}
+    @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+    @keyframes slideOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(100%);opacity:0;}}
+    .ok-badge{display:inline-flex;align-items:center;gap:5px;background:var(--ok-orange);color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+    .waves{position:fixed;bottom:0;left:0;right:0;height:100px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");background-size:1200px 100px;animation:waves 15s linear infinite;z-index:-1;}
+    @keyframes waves{0%{background-position-x:0;}100%{background-position-x:1200px;}}
 </style>
 </head>
 <body>
 <div class="waves"></div>
-
 <div id="loading" class="loading">
-  <div class="loader"></div>
-  <p>Загрузка ВМесте...</p>
-  <p id="loading-status">Подключение к OK.ru...</p>
+    <div class="loader"></div>
+    <p>Загрузка ВМесте...</p>
+    <p id="loading-status">Подключение к OK.ru...</p>
 </div>
 
 <div class="app-container" id="app-container">
-  <header class="header">
-    <div class="logo"><div class="logo-icon">🌊</div><h1>ВМесте</h1></div>
-    <div class="status" id="connection-status"><div class="status-dot"></div><span>OK.ru</span></div>
-  </header>
-
-  <main class="main-layout">
-    <aside class="profile-card">
-      <div class="profile-header">
-        <img src="" alt="Avatar" class="avatar" id="user-avatar">
-        <div class="profile-info">
-          <h3 id="user-name">Загрузка...</h3>
-          <div class="location" id="user-location">📍 Одноклассники</div>
-          <div class="status">
-            <div class="status-dot"></div><span id="user-status">online</span>
-          </div>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">🌊</div>
+            <h1>ВМесте</h1>
         </div>
-      </div>
-      <div class="stats-grid">
-        <div class="stat-item"><div class="stat-value" id="sent-count">0</div><div class="stat-label">Отправлено</div></div>
-        <div class="stat-item"><div class="stat-value" id="caught-count">0</div><div class="stat-label">Поймано</div></div>
-        <div class="stat-item"><div class="stat-value" id="likes-count">0</div><div class="stat-label">Лайков</div></div>
-        <div class="stat-item"><div class="stat-value" id="days-count">1</div><div class="stat-label">Дней в OK</div></div>
-      </div>
-      <div class="action-buttons">
-        <button class="btn btn-secondary" onclick="refreshProfile()">🔄 Обновить</button>
-        <button class="btn btn-secondary" onclick="showAbout()">ℹ️ О приложении</button>
-      </div>
-    </aside>
+        <div class="status" id="connection-status">
+            <div class="status-dot"></div>
+            <span>OK.ru</span>
+        </div>
+    </header>
 
-    <section class="ocean-section">
-      <h2 class="ocean-title"><span>🌊 Океан посланий из OK.ru</span></h2>
-      <div style="margin-bottom:20px;text-align:center;">
-        <div class="ok-badge">👥 Пользователей OK.ru онлайн: <span id="online-count">0</span></div>
-      </div>
-      <div class="action-buttons">
-        <button class="btn btn-primary" onclick="showSendMessage()">✍️ Бросить послание</button>
-        <button class="btn btn-primary" onclick="catchRandomMessage()">🎣 Поймать послание</button>
-      </div>
-      <div id="message-display" style="margin-top:30px;"></div>
-    </section>
+    <main class="main-layout">
+        <!-- Left: Profile -->
+        <aside class="profile-card">
+            <div class="profile-header" id="profile-header">
+                <img src="" alt="Avatar" class="avatar" id="user-avatar">
+                <div class="profile-info">
+                    <h3 id="user-name">Загрузка...</h3>
+                    <div class="location" id="user-location">📍 OK.ru</div>
+                    <div class="status">
+                        <div class="status-dot"></div>
+                        <span id="user-status">online</span>
+                    </div>
+                </div>
+            </div>
 
-    <aside class="info-panel">
-      <h3 class="info-title">📊 О приложении</h3>
-      <p><strong>"ВМесте"</strong> — только для OK.ru</p>
-      <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin: 15px 0;">
-        <p style="font-size:14px;font-style:italic;color:var(--secondary);">
-          "Бросай в пространство. Лови отклик. Общайся по-настоящему."
-        </p>
-      </div>
-      <p>• <strong>Только OK.ru:</strong> Настоящие пользователи Одноклассников</p>
-      <p>• <strong>Анонимность:</strong> Послания не привязаны к профилю</p>
-      <p>• <strong>Случайность:</strong> Ловите послания от других пользователей OK</p>
-    </aside>
-  </main>
+            <div class="stats-grid">
+                <div class="stat-item"><div class="stat-value" id="sent-count">0</div><div class="stat-label">Отправлено</div></div>
+                <div class="stat-item"><div class="stat-value" id="caught-count">0</div><div class="stat-label">Поймано</div></div>
+                <div class="stat-item"><div class="stat-value" id="likes-count">0</div><div class="stat-label">Лайков</div></div>
+                <div class="stat-item"><div class="stat-value" id="days-count">1</div><div class="stat-label">Дней в OK</div></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="refreshProfile()">🔄 Обновить</button>
+                <button class="btn btn-secondary" onclick="showAbout()">ℹ️ О приложении</button>
+            </div>
+        </aside>
+
+        <!-- Center: Ocean -->
+        <section class="ocean-section">
+            <h2 class="ocean-title"><span>🌊 Океан посланий из OK.ru</span></h2>
+            <div style="margin-bottom: 20px; text-align: center;">
+                <div class="ok-badge">👥 Пользователей OK.ru онлайн: <span id="online-count">0</span></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="showSendMessage()">✍️ Бросить послание</button>
+                <button class="btn btn-primary" onclick="catchRandomMessage()">🎣 Поймать послание</button>
+            </div>
+
+            <div id="message-display" style="margin-top:30px;">
+                <div class="message-bubble">
+                    <div class="message-content">Добро пожаловать в океан посланий OK.ru!</div>
+                    <div class="message-meta"><span>💬 OK.ru</span><span>Только что</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Info -->
+        <aside class="info-panel">
+            <h3 class="info-title">📊 О приложении</h3>
+            <p style="margin-bottom: 15px;"><strong>"ВМесте"</strong> — эксклюзивно для пользователей OK.ru.</p>
+            <div style="background:rgba(255,255,255,0.05);padding:15px;border-radius:12px;margin:15px 0;">
+                <p style="font-size:14px;font-style:italic;color:var(--secondary);">Бросай в пространство. Лови отклик. Общайся по-настоящему.</p>
+            </div>
+            <p>• <strong>Только OK.ru:</strong> Настоящие пользователи Одноклассников</p>
+            <p>• <strong>Анонимность:</strong> Ваши послания не привязаны к профилю</p>
+            <p>• <strong>Случайность:</strong> Ловите послания от других пользователей OK</p>
+            <div style="margin-top:20px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.1);">
+                <p style="font-size:12px;opacity:0.7;">🔗 Интеграция с OK.ru<br>💾 База данных Supabase<br>🌐 Онлайн в реальном времени</p>
+            </div>
+        </aside>
+    </main>
 </div>
 
-<!-- Модал -->
+<!-- Send Message Modal -->
 <div id="sendMessageModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:var(--dark);padding:30px;border-radius:20px;width:90%;max-width:500px;border:2px solid var(--ok-orange);">
-    <h3 style="margin-bottom:20px;color:var(--ok-orange);">✍️ Бросить послание</h3>
-    <textarea id="messageInput" placeholder="Что хотите сказать?" style="width:100%;height:150px;padding:15px;border-radius:12px;background:rgba(255,255,255,0.05);color:white;border:1px solid rgba(255,255,255,0.2);font-size:16px;resize:vertical;"></textarea>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button onclick="sendMessage()" class="btn btn-primary" style="flex:1;">🌊 Отправить</button>
-      <button onclick="hideModal('sendMessageModal')" class="btn btn-secondary" style="flex:1;">Отмена</button>
+    <div style="background:var(--dark);padding:30px;border-radius:20px;width:90%;max-width:500px;border:2px solid var(--ok-orange);">
+        <h3 style="margin-bottom:20px;color:var(--ok-orange);">✍️ Бросить послание в океан</h3>
+        <textarea id="messageInput" placeholder="Что вы хотите сказать другим пользователям OK.ru?" style="width:100%;height:150px;padding:15px;border-radius:12px;background:rgba(255,255,255,0.05);color:white;border:1px solid rgba(255,255,255,0.2);font-size:16px;resize:vertical;"></textarea>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+            <button onclick="sendMessage()" class="btn btn-primary" style="flex:1;">🌊 Отправить</button>
+            <button onclick="hideModal('sendMessageModal')" class="btn btn-secondary" style="flex:1;">Отмена</button>
+        </div>
     </div>
-  </div>
 </div>
 
 <script>
-// ================== Supabase ==================
-const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL='https://pyhatmplhbogwufatdga.supabase.co';
+const SUPABASE_KEY='sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
+let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentUser = {};
 
-let currentUser = {ok_id:null,full_name:'',avatar_url:''};
-
-// ================== Утилиты ==================
 function updateLoadingStatus(msg){document.getElementById('loading-status').textContent=msg;}
 function showApp(){document.getElementById('loading').style.display='none';document.getElementById('app-container').style.display='block';}
-function showNotification(msg,type='success'){const n=document.createElement('div');n.className='notification';n.textContent=msg;
-n.style.background= type==='success'? '#50E3C2': type==='error'? '#FF6B8B': '#FFA500'; document.body.appendChild(n);
-setTimeout(()=>{n.style.animation='slideOut 0.3s ease';setTimeout(()=>n.remove(),300)},300);}
-function showMessageInOcean(message,isCaught=false){
-  const display=document.getElementById('message-display');
-  const time=new Date(message.created_at).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-  const html=`<div class="message-bubble"><div class="message-content">"${message.content}"</div><div class="message-meta"><span>${isCaught?'🎣 Поймано':'🌊 В океане'}</span><span>${time}</span></div></div>`;
-  display.innerHTML=html+display.innerHTML;
-  const bubbles=display.querySelectorAll('.message-bubble'); if(bubbles.length>5)bubbles[bubbles.length-1].remove();
-}
-function showSendMessage(){document.getElementById('sendMessageModal').style.display='flex';document.getElementById('messageInput').focus();}
-function hideModal(id){document.getElementById(id).style.display='none';}
-function showAbout(){showNotification('🌊 ВМесте - для пользователей OK.ru','ok');}
-function refreshProfile(){loadUserStats();loadOnlineCount();showNotification('Профиль обновлен','success');}
+function showNotification(msg,type='success'){const n=document.createElement('div');n.className='notification';n.style.background=type==='success'?'#50E3C2':type==='error'?'#FF6B8B':'#EE8C3A';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>{n.style.animation='slideOut 0.3s ease';setTimeout(()=>n.remove(),300)},3000);}
 
-// ================== OK OAuth ==================
-async function getOKUserData(){
-  updateLoadingStatus('Подключение к OK.ru через OAuth...');
-  try{
-    const params=new URLSearchParams(window.location.search);
-    const okToken=params.get('ok_access_token'); // OAuth токен
-    if(!okToken) throw new Error('Токен отсутствует');
-    const resp = await fetch(`https://api.ok.ru/fb.do?method=users.getCurrentUser&access_token=${okToken}&application_key=512004483266&format=json`);
-    const data = await resp.json();
-    return {ok_id:data.uid,full_name:data.first_name+' '+data.last_name,avatar_url:data.pic_3||data.pic_1};
-  }catch(e){
-    console.error(e);
-    return {ok_id:'guest',full_name:'Гость OK.ru',avatar_url:'https://ui-avatars.com/api/?name=Гость+OK&background=EE8C3A&color=fff&size=200'};
+function getOKTokenFromHash(){
+  const hash = new URLSearchParams(window.location.hash.slice(1));
+  const token = hash.get('access_token');
+  if(!token) throw new Error('Токен отсутствует');
+  return token;
+}
+
+async function getOKUserData(token){
+  const url=`https://api.ok.ru/fb.do?method=users.getCurrentUser&access_token=${token}&application_key=512004483266&format=json`;
+  const res=await fetch(url);
+  const data=await res.json();
+  return {
+    ok_id:data.uid,
+    first_name:data.first_name,
+    last_name:data.last_name,
+    full_name:data.first_name+' '+data.last_name,
+    avatar_url:data.pic_1
+  };
+}
+
+async function updateUserInterface(user){
+  document.getElementById('user-name').textContent=user.full_name;
+  document.getElementById('user-avatar').src=user.avatar_url;
+  document.getElementById('user-avatar').alt=user.full_name;
+  currentUser=user;
+  document.getElementById('connection-status').innerHTML=`<div class="status-dot" style="background:#EE8C3A"></div><span>Подключено к OK.ru</span>`;
+}
+
+async function saveUserToDatabase(){
+  const {data,error}=await supabaseClient.from('profiles').upsert({
+    ok_id:currentUser.ok_id,
+    full_name:currentUser.full_name,
+    avatar_url:currentUser.avatar_url,
+    last_seen:new Date().toISOString(),
+    is_online:true
+  }).select().single();
+  if(error)console.error(error);else console.log('Профиль сохранен:',data);
+}
+
+async function loadOceanMessages(){
+  const {data,error}=await supabaseClient.from('messages').select('*').order('created_at',{ascending:false}).limit(5);
+  if(error)console.error(error);
+  const container=document.getElementById('message-display');
+  container.innerHTML='';
+  data.forEach(msg=>{
+    const div=document.createElement('div');
+    div.className='message-bubble';
+    div.innerHTML=`<div class="message-content">${msg.content}</div><div class="message-meta"><span>${msg.user_name}</span><span>${new Date(msg.created_at).toLocaleTimeString()}</span></div>`;
+    container.appendChild(div);
+  });
+}
+
+function showSendMessage(){document.getElementById('sendMessageModal').style.display='flex';}
+function hideModal(id){document.getElementById(id).style.display='none';}
+
+async function sendMessage(){
+  const content=document.getElementById('messageInput').value.trim();
+  if(!content){showNotification('Введите текст сообщения','error');return;}
+  const {data,error}=await supabaseClient.from('messages').insert([{
+    user_id:currentUser.ok_id,
+    user_name:currentUser.full_name,
+    content,
+    created_at:new Date().toISOString()
+  }]);
+  if(error){showNotification('Ошибка при отправке','error');console.error(error);}else{
+    showNotification('Сообщение отправлено');
+    document.getElementById('messageInput').value='';
+    hideModal('sendMessageModal');
+    loadOceanMessages();
   }
 }
 
-// ================== Статистика ==================
-async function loadUserStats(){
-  if(!currentUser.ok_id) return;
-  const { data:messages } = await db.from('messages').select('*').eq('sender_ok_id',currentUser.ok_id);
-  document.getElementById('sent-count').textContent=messages?.length||0;
-  document.getElementById('caught-count').textContent=messages?.filter(m=>m.caught_by).length||0;
-  document.getElementById('likes-count').textContent=messages?.reduce((sum,m)=>sum+(m.likes||0),0)||0;
-}
-
-// ================== Онлайн ==================
-async function loadOnlineCount(){
-  const { count } = await db.from('profiles').select('*',{count:'exact',head:true}).eq('is_online',true).eq('is_ok_user',true);
-  document.getElementById('online-count').textContent=count||0;
-}
-
-// ================== Отправка сообщений ==================
-async function sendMessage(){
-  const text=document.getElementById('messageInput').value.trim();
-  if(!text)return showNotification('Введите сообщение','error');
-  await db.from('messages').insert({sender_ok_id:currentUser.ok_id,content:text,created_at:new Date()});
-  hideModal('sendMessageModal'); document.getElementById('messageInput').value='';
-  showNotification('🌊 Послание отправлено!','success'); loadUserStats();
-}
-
-// ================== Ловец посланий ==================
 async function catchRandomMessage(){
-  const { data,error } = await db.from('messages').select('*').order('random()').limit(1).single();
-  if(error||!data){showNotification('Нет посланий для поимки','error');return;}
-  showMessageInOcean(data,true);
-  await db.from('messages').update({caught_by:currentUser.ok_id}).eq('id',data.id);
-  loadUserStats();
+  const {data,error}=await supabaseClient.from('messages').select('*').order('created_at',{ascending:false}).limit(50);
+  if(error){showNotification('Ошибка при ловле послания','error');console.error(error);return;}
+  if(data.length===0){showNotification('Нет посланий для ловли','error');return;}
+  const randomMsg=data[Math.floor(Math.random()*data.length)];
+  showNotification(`Поймано послание от ${randomMsg.user_name}`);
+  const container=document.getElementById('message-display');
+  const div=document.createElement('div');
+  div.className='message-bubble';
+  div.innerHTML=`<div class="message-content">${randomMsg.content}</div><div class="message-meta"><span>${randomMsg.user_name}</span><span>${new Date(randomMsg.created_at).toLocaleTimeString()}</span></div>`;
+  container.prepend(div);
 }
 
-// ================== Инициализация ==================
 async function initApp(){
-  updateLoadingStatus('Загрузка данных пользователя OK.ru...');
-  currentUser=await getOKUserData();
-  document.getElementById('user-name').textContent=currentUser.full_name;
-  document.getElementById('user-avatar').src=currentUser.avatar_url;
-  showApp();
-  loadUserStats();
-  loadOnlineCount();
+  try{
+    updateLoadingStatus('Получаем токен OK.ru...');
+    const token=getOKTokenFromHash();
+    updateLoadingStatus('Получаем данные пользователя...');
+    const user=await getOKUserData(token);
+    await updateUserInterface(user);
+    updateLoadingStatus('Сохраняем профиль в базе данных...');
+    await saveUserToDatabase();
+    updateLoadingStatus('Загрузка сообщений...');
+    await loadOceanMessages();
+    showApp();
+  }catch(e){console.error(e);updateLoadingStatus('Ошибка: '+e.message);}
 }
-initApp();
+
+window.onload=initApp;
 </script>
 </body>
 </html>
