@@ -131,7 +131,7 @@ function waitForOKSDK(timeout = 5000) {
         const start = Date.now();
 
         (function check() {
-            if (window.OK && typeof OK.init === 'function') {
+            if (window.OK) {
                 resolve();
             } else if (Date.now() - start > timeout) {
                 reject(new Error('OK SDK timeout'));
@@ -141,6 +141,7 @@ function waitForOKSDK(timeout = 5000) {
         })();
     });
 }
+
 
 /* ================== INIT ================== */
 document.addEventListener('DOMContentLoaded', async () => {
