@@ -4,17 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ВМесте 🌊 | Океан посланий из OK.ru</title>
-<script src="https://connect.ok.ru/connect.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --primary:#4A90E2;--secondary:#50E3C2;--dark:#1A1A2E;--light:#F8F9FA;--accent:#FF6B8B;--ok-orange:#EE8C3A;
 }
-body {
-  font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
-  background: linear-gradient(135deg,#0F2027,#203A43,#2C5364);
-  color: var(--light); margin:0; padding:20px;
-}
+body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif; background: linear-gradient(135deg,#0F2027,#203A43,#2C5364); color: var(--light); margin:0; padding:20px; }
 .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
 .logo h1 { font-size:28px; background: linear-gradient(45deg,var(--ok-orange),var(--primary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .status-dot { width:8px; height:8px; border-radius:50%; background:var(--ok-orange); animation:pulse 2s infinite; }
@@ -97,37 +92,36 @@ body {
 </div>
 
 <script>
+// --- Supabase ---
 const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
 const supabaseClient = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let currentUser = { ok_id:null, full_name:'', avatar_url:'' };
+// --- Данные пользователя берем из query-параметров ---
+const params = new URLSearchParams(window.location.search);
+const currentUser = {
+  ok_id: params.get('vk_ok_user_id'),
+  full_name: params.get('user_name'),
+  avatar_url: `https://i.mycdn.me/i?r=AZr9iF4BvQh5iC87l1C7n8ZJZ94pGjHhXFOvjKm9Vy3G&t=2&f=2&fn=user${params.get('vk_ok_user_id')}`
+};
 
-function showNotification(msg,type='ok') {
-  const n=document.createElement('div'); n.className='notification'; n.textContent=msg;
-  document.body.appendChild(n); setTimeout(()=>{ n.style.animation='slideOut 0.3s ease'; setTimeout(()=>n.remove(),300); },3000);
-}
-
-function showApp() {
-  document.querySelector('#user-name').textContent=currentUser.full_name;
-  document.querySelector('#user-avatar').src=currentUser.avatar_url;
-}
-
+function showNotification(msg){ const n=document.createElement('div'); n.className='notification'; n.textContent=msg; document.body.appendChild(n); setTimeout(()=>{ n.style.animation='slideOut 0.3s ease'; setTimeout(()=>n.remove(),300); },3000); }
 function hideModal(id){document.getElementById(id).style.display='none';}
 function showSendMessage(){document.getElementById('sendMessageModal').style.display='flex'; document.getElementById('messageInput').focus();}
+
+function showApp(){ document.querySelector('#user-name').textContent=currentUser.full_name; document.querySelector('#user-avatar').src=currentUser.avatar_url; }
 
 async function sendMessage(){
   const txt=document.getElementById('messageInput').value.trim(); if(!txt){showNotification('Введите текст'); return;}
   const data={content:txt,sender_ok_id:currentUser.ok_id,sender_name:currentUser.full_name,sender_avatar:currentUser.avatar_url,is_anonymous:true,created_at:new Date().toISOString()};
   const {error}=await supabaseClient.from('messages').insert(data);
-  if(error){showNotification('Ошибка отправки','error'); return;}
-  document.getElementById('messageInput').value=''; hideModal('sendMessageModal'); showNotification('✅ Послание отправлено','ok'); loadOceanMessages(); loadUserStats();
+  if(error){showNotification('Ошибка отправки'); return;}
+  document.getElementById('messageInput').value=''; hideModal('sendMessageModal'); showNotification('✅ Послание отправлено'); loadOceanMessages(); loadUserStats();
 }
 
 async function catchRandomMessage(){
-  const {data:msgs,error}=await supabaseClient.from('messages').select('*').neq('sender_ok_id',currentUser.ok_id).eq('is_anonymous',true).limit(10);
-  if(error){showNotification('Ошибка ловли','error'); return;}
-  if(!msgs||msgs.length===0){showNotification('Океан пуст','info'); return;}
+  const {data:msgs}=await supabaseClient.from('messages').select('*').neq('sender_ok_id',currentUser.ok_id).eq('is_anonymous',true).limit(10);
+  if(!msgs || msgs.length===0){showNotification('Океан пуст'); return;}
   const msg=msgs[Math.floor(Math.random()*msgs.length)];
   const display=document.getElementById('message-display');
   const time=new Date(msg.created_at).toLocaleString();
@@ -136,10 +130,9 @@ async function catchRandomMessage(){
 }
 
 async function loadOceanMessages(){
-  const {data:msgs,error}=await supabaseClient.from('messages').select('*').eq('is_anonymous',true).order('created_at',{ascending:false}).limit(5);
-  if(error)return;
+  const {data:msgs}=await supabaseClient.from('messages').select('*').eq('is_anonymous',true).order('created_at',{ascending:false}).limit(5);
   const display=document.getElementById('message-display'); display.innerHTML='';
-  msgs.forEach(msg=>{ const time=new Date(msg.created_at).toLocaleString(); display.innerHTML+=`<div class="message-bubble"><div class="message-content">"${msg.content}"</div><div class="message-meta">🌊 ${time}</div></div>`; });
+  if(msgs) msgs.forEach(msg=>{ const time=new Date(msg.created_at).toLocaleString(); display.innerHTML+=`<div class="message-bubble"><div class="message-content">"${msg.content}"</div><div class="message-meta">🌊 ${time}</div></div>`; });
 }
 
 async function loadUserStats(){
@@ -147,30 +140,9 @@ async function loadUserStats(){
   document.getElementById('sent-count').textContent=msgs?msgs.length:0;
 }
 
-async function loadOnlineCount(){
-  const {count}=await supabaseClient.from('profiles').select('*',{count:'exact',head:true}).eq('is_online',true).eq('is_ok_user',true);
-  document.getElementById('online-count').textContent=count||0;
-}
+function refreshProfile(){ showNotification('Профиль обновлен'); loadUserStats(); loadOceanMessages(); }
 
-function refreshProfile(){ showNotification('Профиль обновлен','ok'); loadUserStats(); loadOnlineCount(); }
-
-function initOKUser(){
-  OKSDK.init({
-    appId: '512004483266',
-    onLoad: function() {
-      OKSDK.API('users.getCurrentUser', null, function(user){
-        currentUser.ok_id=user.uid;
-        currentUser.full_name=`${user.first_name} ${user.last_name}`;
-        currentUser.avatar_url=user.pic_3 || user.pic_2 || '';
-        showApp();
-        showNotification(`Добро пожаловать, ${currentUser.full_name}!`);
-        loadUserStats(); loadOceanMessages(); loadOnlineCount();
-      });
-    }
-  });
-}
-
-document.addEventListener('DOMContentLoaded',()=>{ initOKUser(); });
+document.addEventListener('DOMContentLoaded',()=>{ showApp(); loadUserStats(); loadOceanMessages(); });
 </script>
 </body>
 </html>
