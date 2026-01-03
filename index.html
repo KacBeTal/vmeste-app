@@ -125,20 +125,37 @@ function showApp() {
     document.getElementById('app').style.display = 'block';
 }
 
+/* ================== WAIT OK SDK ================== */
+function waitForOKSDK(timeout = 5000) {
+    return new Promise((resolve, reject) => {
+        const start = Date.now();
+
+        (function check() {
+            if (window.OK && typeof OK.init === 'function') {
+                resolve();
+            } else if (Date.now() - start > timeout) {
+                reject(new Error('OK SDK timeout'));
+            } else {
+                requestAnimationFrame(check);
+            }
+        })();
+    });
+}
+
 /* ================== INIT ================== */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     setLoading('Инициализация…');
 
-    // ВАЖНО: OK SDK появляется ТОЛЬКО внутри ok.ru/game
-    if (!window.OK) {
+    try {
+        await waitForOKSDK();
+        initOK();
+    } catch (e) {
+        console.error(e);
         setError(
             'OK SDK недоступен.\n' +
-            'Откройте игру через сайт OK.ru'
+            'Проверьте, что игра открыта через OK.ru'
         );
-        return;
     }
-
-    initOK();
 });
 
 function initOK() {
@@ -176,6 +193,7 @@ function loadProfile() {
     });
 }
 </script>
+
 
 </body>
 </html>
