@@ -5,6 +5,9 @@
 <title>ВМесте</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+<!-- VK Bridge (обязателен) -->
+<script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+
 <style>
 html, body {
     margin: 0;
@@ -92,7 +95,7 @@ html, body {
 <!-- ===== LOADING ===== -->
 <div id="loading">
     <div class="loader"></div>
-    <p id="loading-text">Подключение к OK.ru…</p>
+    <p id="loading-text">Инициализация…</p>
     <div id="error"></div>
 </div>
 
@@ -126,48 +129,43 @@ function showApp() {
 }
 
 /* ================== INIT ================== */
-document.addEventListener('DOMContentLoaded', () => {
-    setLoading('Загрузка профиля…');
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        setLoading('Подключение к платформе…');
 
-    // ❗ НИКАКИХ wait / timeout / init
-    tryLoadProfile();
+        // Инициализация VK Mini App (работает и в OK)
+        await vkBridge.send('VKWebAppInit');
+
+        loadProfile();
+    } catch (e) {
+        console.error(e);
+        setError('Ошибка инициализации приложения');
+    }
 });
 
-/* ================== SAFE PROFILE LOAD ================== */
-function tryLoadProfile(attempt = 0) {
-    if (!window.OK || !OK.api) {
-        if (attempt > 20) {
-            setError('OK SDK недоступен');
-            return;
-        }
+/* ================== PROFILE ================== */
+async function loadProfile() {
+    try {
+        setLoading('Загрузка профиля…');
 
-        // пробуем ещё раз через 100 мс
-        setTimeout(() => tryLoadProfile(attempt + 1), 100);
-        return;
-    }
-
-    OK.api('users.getCurrentUser', {}, profile => {
-        if (!profile || profile.error_code) {
-            console.error(profile);
-            setError('Не удалось получить профиль');
-            return;
-        }
+        const user = await vkBridge.send('VKWebAppGetUserInfo');
 
         document.getElementById('name').textContent =
-            profile.first_name + ' ' + profile.last_name;
+            user.first_name + ' ' + user.last_name;
 
         document.getElementById('avatar').src =
-            profile.pic_1 || '';
+            user.photo_100 || '';
 
         document.getElementById('platform').textContent =
-            'Платформа: OK.ru';
+            'Платформа: Одноклассники (VK Mini App)';
 
         showApp();
-    });
+    } catch (e) {
+        console.error(e);
+        setError('Не удалось получить профиль пользователя');
+    }
 }
 </script>
-
-
 
 </body>
 </html>
