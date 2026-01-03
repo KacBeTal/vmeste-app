@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🌊 ВМесте | OK.ru</title>
     
+    <!-- ТОЛЬКО Supabase для хранения сообщений -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
     <style>
-        /* Минимальные стили для быстрой загрузки */
+        /* Минимальные стили */
         * {
             margin: 0;
             padding: 0;
@@ -24,74 +27,57 @@
         
         .app-container {
             padding: 15px;
-            animation: fadeIn 0.5s ease;
+            max-width: 600px;
+            margin: 0 auto;
         }
         
-        /* Быстрый заголовок */
-        .app-header {
+        /* Заголовок */
+        .header {
             text-align: center;
-            padding: 20px 0;
-            margin-bottom: 20px;
+            padding: 15px 0 25px 0;
         }
         
-        .app-title {
-            font-size: 24px;
+        .logo {
+            font-size: 40px;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .title {
+            font-size: 28px;
             color: #EE8C3A;
-            margin: 10px 0;
+            margin-bottom: 5px;
         }
         
-        .app-subtitle {
+        .subtitle {
             font-size: 14px;
             opacity: 0.8;
         }
         
-        /* Быстрые карточки */
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(238, 140, 58, 0.2);
-            backdrop-filter: blur(10px);
+        /* Кнопки действий */
+        .action-buttons {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 25px;
         }
         
-        /* Сообщение */
-        .message {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-left: 4px solid #EE8C3A;
-        }
-        
-        .message-text {
-            font-style: italic;
-            margin-bottom: 8px;
-            line-height: 1.4;
-        }
-        
-        .message-meta {
-            font-size: 12px;
-            opacity: 0.7;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        /* Кнопки */
         .btn {
-            width: 100%;
-            padding: 16px;
+            padding: 18px;
             border: none;
-            border-radius: 12px;
+            border-radius: 15px;
             font-size: 16px;
             font-weight: 600;
-            margin-bottom: 10px;
             cursor: pointer;
-            transition: transform 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
+            transition: all 0.2s;
         }
         
         .btn:active {
@@ -106,50 +92,47 @@
         .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        /* Статус */
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            background: rgba(238, 140, 58, 0.2);
-            border-radius: 20px;
-            font-size: 14px;
-            margin-top: 10px;
+        /* Сообщения */
+        .message {
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(238, 140, 58, 0.3);
+            animation: fadeIn 0.5s ease;
         }
         
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #50E3C2;
-            animation: pulse 2s infinite;
+        .message-text {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            font-style: italic;
         }
         
-        /* Анимации */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .message-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            opacity: 0.7;
         }
         
         /* Индикатор загрузки */
         .loader {
-            display: flex;
+            display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 200px;
+            padding: 40px 0;
             gap: 15px;
         }
         
-        .loader-spinner {
+        .loader.active {
+            display: flex;
+        }
+        
+        .spinner {
             width: 40px;
             height: 40px;
             border: 3px solid rgba(238, 140, 58, 0.2);
@@ -163,19 +146,112 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Мобильная оптимизация */
-        @media (max-width: 400px) {
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Статус */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(238, 140, 58, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #50E3C2;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Уведомление */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #EE8C3A;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 300px;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: #1a2c42;
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #EE8C3A;
+        }
+        
+        .modal-title {
+            color: #EE8C3A;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-size: 16px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 480px) {
             .app-container {
                 padding: 10px;
             }
             
-            .card {
-                padding: 15px;
+            .btn {
+                padding: 16px;
+                font-size: 15px;
             }
             
-            .btn {
-                padding: 14px;
-                font-size: 15px;
+            .message {
+                padding: 15px;
             }
         }
     </style>
@@ -183,325 +259,442 @@
 <body>
     <div class="app-container" id="app">
         <!-- Заголовок -->
-        <div class="app-header">
-            <div style="font-size: 32px; margin-bottom: 5px;">🌊</div>
-            <h1 class="app-title">ВМесте</h1>
-            <p class="app-subtitle">Анонимные послания в OK.ru</p>
-            <div class="status" id="connection-status">
+        <div class="header">
+            <div class="logo">🌊</div>
+            <h1 class="title">ВМесте</h1>
+            <p class="subtitle">Анонимный океан посланий OK.ru</p>
+            <div class="status" id="status">
                 <div class="status-dot"></div>
-                <span>Подключение...</span>
+                <span id="status-text">Загрузка...</span>
             </div>
         </div>
         
-        <!-- Основной контент -->
-        <div id="content">
-            <!-- Динамически загружаемый контент -->
-        </div>
-        
-        <!-- Быстрые действия -->
-        <div style="margin-top: 20px;">
-            <button class="btn btn-primary" onclick="sendMessage()">
+        <!-- Действия -->
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="showSendModal()">
                 ✍️ Бросить послание
             </button>
-            <button class="btn btn-secondary" onclick="catchMessage()">
+            <button class="btn btn-secondary" onclick="getRandomMessage()">
                 🎣 Поймать послание
             </button>
+        </div>
+        
+        <!-- Индикатор загрузки -->
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <div id="loader-text">Загрузка...</div>
+        </div>
+        
+        <!-- Контейнер для сообщений -->
+        <div id="messages-container">
+            <!-- Сообщения будут здесь -->
+        </div>
+        
+        <!-- Информация -->
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div style="font-size: 12px; opacity: 0.7;">
+                💬 Сообщения хранятся в базе данных<br>
+                🔒 Анонимно и безопасно<br>
+                📱 Только для пользователей OK.ru
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно отправки -->
+    <div class="modal" id="sendModal">
+        <div class="modal-content">
+            <h3 class="modal-title">✍️ Бросить послание в океан</h3>
+            <textarea id="messageInput" placeholder="Напишите что-нибудь для других пользователей OK.ru..."></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="sendMessage()" style="flex: 1;">
+                    🌊 Отправить
+                </button>
+                <button class="btn btn-secondary" onclick="hideModal()" style="flex: 1;">
+                    Отмена
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
         // ========== КОНФИГУРАЦИЯ ==========
-        const APP_CONFIG = {
-            // Безопасные настройки без Supabase
-            apiUrl: 'https://ваш-сервер.рф/api',
-            okAppId: '', // Ваш APP_ID из OK
-            useMockData: true // Использовать тестовые данные пока
+        // Ваши ключи Supabase (только для хранения сообщений)
+        const SUPABASE_CONFIG = {
+            url: 'https://your-project.supabase.co',
+            key: 'your-anon-key'
         };
         
-        // ========== ПОЛУЧЕНИЕ ДАННЫХ ИЗ OK ==========
-        function getOKParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            // Основные параметры от OK
-            const params = {
-                viewer_id: urlParams.get('viewer_id') || urlParams.get('uid'),
-                session_key: urlParams.get('session_key'),
-                auth_key: urlParams.get('auth_key'),
-                api_server: urlParams.get('api_server'),
-                is_app_user: urlParams.get('is_app_user') === '1',
-                referrer: urlParams.get('referrer'),
-                location: urlParams.get('location')
-            };
-            
-            console.log('📱 Параметры от OK:', params);
-            
-            // Если параметров нет - демо режим
-            if (!params.viewer_id) {
-                console.warn('⚠️ Параметры OK не найдены, включаю демо-режим');
-                return {
-                    viewer_id: 'demo_user_' + Date.now(),
-                    is_app_user: false,
-                    demo_mode: true
-                };
-            }
-            
-            return params;
-        }
-        
-        // ========== БЫСТРАЯ ЗАГРУЗКА ==========
-        function showLoading(message = 'Загрузка...') {
-            document.getElementById('content').innerHTML = `
-                <div class="loader">
-                    <div class="loader-spinner"></div>
-                    <div>${message}</div>
-                </div>
-            `;
-            
-            document.getElementById('connection-status').innerHTML = `
-                <div class="status-dot" style="background: #EE8C3A"></div>
-                <span>${message}</span>
-            `;
-        }
-        
-        function showMainContent() {
-            const params = getOKParams();
-            const isDemo = params.demo_mode;
-            
-            let userName = 'Пользователь OK';
-            let userAvatar = 'https://ui-avatars.com/api/?name=OK+User&background=EE8C3A&color=fff&size=200';
-            
-            // Если есть viewer_id, можем показать ID
-            if (params.viewer_id && !isDemo) {
-                userName = `Пользователь #${params.viewer_id.slice(-6)}`;
-            }
-            
-            document.getElementById('content').innerHTML = `
-                <div class="card">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                        <img src="${userAvatar}" alt="${userName}" 
-                             style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #EE8C3A;">
-                        <div>
-                            <h3 style="color: #EE8C3A;">${userName}</h3>
-                            <div style="font-size: 12px; opacity: 0.8;">
-                                ${isDemo ? '🔸 Демо-режим' : '✅ Подключено к OK.ru'}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0;">
-                        <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px;">
-                            <div style="font-size: 20px; font-weight: bold; color: #EE8C3A;">0</div>
-                            <div style="font-size: 11px; opacity: 0.8;">Посланий</div>
-                        </div>
-                        <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px;">
-                            <div style="font-size: 20px; font-weight: bold; color: #EE8C3A;">0</div>
-                            <div style="font-size: 11px; opacity: 0.8;">Поймано</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <h3 style="margin-bottom: 15px; color: #EE8C3A;">🌊 Последние послания</h3>
-                    
-                    <div class="message">
-                        <div class="message-text">
-                            "Добро пожаловать в приложение! Здесь можно делиться мыслями анонимно."
-                        </div>
-                        <div class="message-meta">
-                            <span>👤 Аноним</span>
-                            <span>Только что</span>
-                        </div>
-                    </div>
-                    
-                    <div class="message">
-                        <div class="message-text">
-                            "Кто тоже заходит сюда из Одноклассников? 📱"
-                        </div>
-                        <div class="message-meta">
-                            <span>👤 OK-пользователь</span>
-                            <span>5 минут назад</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('connection-status').innerHTML = `
-                <div class="status-dot"></div>
-                <span>${isDemo ? 'Демо-режим' : 'Подключено к OK.ru'}</span>
-            `;
-        }
-        
-        // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
-        function sendMessage() {
-            const message = prompt('Напишите ваше послание для океана:');
-            
-            if (message && message.trim().length > 2) {
-                // Простая имитация отправки
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-                messageDiv.style.animation = 'fadeIn 0.5s ease';
-                
-                messageDiv.innerHTML = `
-                    <div class="message-text">"${message}"</div>
-                    <div class="message-meta">
-                        <span>👤 Вы</span>
-                        <span>Только что</span>
-                    </div>
-                `;
-                
-                // Добавляем в начало
-                const messagesContainer = document.querySelector('.card:last-child');
-                if (messagesContainer) {
-                    messagesContainer.insertBefore(messageDiv, messagesContainer.firstChild);
-                }
-                
-                // Показываем уведомление
-                showQuickAlert('✅ Послание отправлено в океан!');
-            }
-        }
-        
-        function catchMessage() {
-            const messages = [
-                "Привет из ОК! Как дела?",
-                "Кто-нибудь здесь тоже любит анонимное общение?",
-                "Сегодня отличный день для новых знакомств!",
-                "Поделитесь, что хорошего произошло с вами сегодня?",
-                "Анонимность — это свобода самовыражения 💫"
-            ];
-            
-            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-            messageDiv.style.animation = 'fadeIn 0.5s ease';
-            messageDiv.style.borderLeftColor = '#50E3C2';
-            
-            messageDiv.innerHTML = `
-                <div class="message-text">"${randomMessage}"</div>
-                <div class="message-meta">
-                    <span>🎣 Поймано!</span>
-                    <span>Только что</span>
-                </div>
-            `;
-            
-            // Добавляем в начало
-            const messagesContainer = document.querySelector('.card:last-child');
-            if (messagesContainer) {
-                messagesContainer.insertBefore(messageDiv, messagesContainer.firstChild);
-            }
-            
-            // Эффект
-            document.querySelectorAll('.btn').forEach(btn => {
-                btn.style.transform = 'scale(0.95)';
-                setTimeout(() => btn.style.transform = '', 200);
-            });
-            
-            showQuickAlert('🎣 Вы поймали новое послание!');
-        }
+        // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+        let supabase = null;
+        let currentUser = {
+            id: null,
+            name: 'Аноним',
+            isOKUser: false
+        };
         
         // ========== УТИЛИТЫ ==========
-        function showQuickAlert(text) {
-            // Создаем простое уведомление
-            const alert = document.createElement('div');
-            alert.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #EE8C3A;
-                color: white;
-                padding: 12px 20px;
-                border-radius: 10px;
-                z-index: 1000;
-                animation: fadeIn 0.3s ease;
-                font-weight: 500;
-                box-shadow: 0 4px 20px rgba(238, 140, 58, 0.3);
-            `;
-            alert.textContent = text;
+        function updateStatus(text, type = 'info') {
+            const statusEl = document.getElementById('status-text');
+            const dotEl = document.getElementById('status').querySelector('.status-dot');
             
-            document.body.appendChild(alert);
+            if (statusEl) statusEl.textContent = text;
+            
+            // Меняем цвет точки
+            const colors = {
+                info: '#50E3C2',
+                success: '#50E3C2',
+                error: '#FF6B8B',
+                warning: '#EE8C3A'
+            };
+            dotEl.style.background = colors[type] || colors.info;
+            
+            console.log('📱 Статус:', text);
+        }
+        
+        function showLoader(show, text = 'Загрузка...') {
+            const loader = document.getElementById('loader');
+            const textEl = document.getElementById('loader-text');
+            
+            if (textEl) textEl.textContent = text;
+            if (loader) loader.classList.toggle('active', show);
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.background = type === 'success' ? '#EE8C3A' : 
+                                           type === 'error' ? '#FF6B8B' : 
+                                           type === 'info' ? '#4A90E2' : '#50E3C2';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
             
             setTimeout(() => {
-                alert.style.animation = 'fadeIn 0.3s ease reverse';
-                setTimeout(() => alert.remove(), 300);
-            }, 2000);
+                notification.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
         
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Приложение ВМесте загружено');
-            
-            // 1. Сразу показываем контент
-            showLoading('Подключение к OK.ru...');
-            
-            // 2. Быстрая проверка параметров
-            setTimeout(() => {
-                const params = getOKParams();
-                console.log('✅ Параметры получены:', params);
+        async function initApp() {
+            try {
+                // 1. Получаем параметры из URL (от OK)
+                const params = getUrlParams();
+                console.log('📱 Параметры URL:', params);
                 
-                // 3. Показываем основной контент
-                showMainContent();
+                // 2. Определяем пользователя
+                currentUser.id = params.viewer_id || `anon_${Date.now()}`;
+                currentUser.isOKUser = !!params.viewer_id;
+                currentUser.name = currentUser.isOKUser ? 
+                    `Пользователь OK #${currentUser.id.slice(-6)}` : 'Анонимный пользователь';
                 
-                // 4. Если есть viewer_id, можно показать персонализированное приветствие
-                if (params.viewer_id && !params.demo_mode) {
-                    setTimeout(() => {
-                        showQuickAlert('👋 Добро пожаловать из OK.ru!');
-                    }, 500);
-                }
+                // 3. Инициализируем Supabase
+                updateStatus('Подключение к базе данных...');
+                await initSupabase();
                 
-                // 5. Адаптируем высоту для iframe
-                adaptToIframe();
+                // 4. Показываем статус
+                updateStatus(currentUser.isOKUser ? 'Подключено к OK.ru' : 'Гостевой режим');
                 
-            }, 800); // Искусственная задержка для имитации загрузки
-            
-            // Обработка касаний для лучшего UX
-            document.addEventListener('touchstart', function() {}, {passive: true});
-        });
+                // 5. Загружаем последние сообщения
+                showLoader(true, 'Загрузка океана...');
+                await loadMessages();
+                showLoader(false);
+                
+                // 6. Адаптируем высоту для iframe
+                adjustIframeHeight();
+                
+            } catch (error) {
+                console.error('Ошибка инициализации:', error);
+                updateStatus('Ошибка загрузки', 'error');
+                showNotification('Не удалось загрузить приложение', 'error');
+                
+                // Показываем демо-данные
+                showDemoMessages();
+            }
+        }
         
-        // Адаптация высоты для iframe OK
-        function adaptToIframe() {
-            // Отправляем высоту родительскому окну
-            function updateHeight() {
-                const height = document.documentElement.scrollHeight;
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                viewer_id: params.get('viewer_id') || params.get('uid'),
+                session_key: params.get('session_key'),
+                api_server: params.get('api_server'),
+                is_app_user: params.get('is_app_user') === '1'
+            };
+        }
+        
+        // ========== SUPABASE ==========
+        async function initSupabase() {
+            try {
+                supabase = supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.key
+                );
                 
-                // Отправляем сообщение родителю (если мы в iframe)
-                if (window.parent !== window) {
-                    window.parent.postMessage({
-                        type: 'iframeResize',
-                        height: height,
-                        app: 'vmeste-ok'
-                    }, '*');
+                // Проверяем подключение
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) throw error;
+                
+                console.log('✅ Supabase подключен');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Ошибка подключения к Supabase:', error);
+                
+                // Создаем заглушку для демо-режима
+                supabase = {
+                    from: () => ({
+                        select: () => Promise.resolve({ data: [], error: null }),
+                        insert: () => Promise.resolve({ data: null, error: 'Demo mode' }),
+                        update: () => Promise.resolve({ data: null, error: 'Demo mode' })
+                    })
+                };
+                
+                throw new Error('Supabase не доступен');
+            }
+        }
+        
+        // ========== РАБОТА С СООБЩЕНИЯМИ ==========
+        async function loadMessages() {
+            try {
+                const { data: messages, error } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('messages-container');
+                container.innerHTML = '';
+                
+                if (messages && messages.length > 0) {
+                    messages.forEach(msg => {
+                        container.appendChild(createMessageElement(msg));
+                    });
+                } else {
+                    // Если нет сообщений, показываем приветственное
+                    container.innerHTML = `
+                        <div class="message">
+                            <div class="message-text">
+                                "Океан посланий пуст... Бросьте первое послание!"
+                            </div>
+                            <div class="message-meta">
+                                <span>🌊 ВМесте</span>
+                                <span>Только что</span>
+                            </div>
+                        </div>
+                    `;
                 }
                 
-                // Также обновляем высоту самого iframe
-                document.body.style.minHeight = height + 'px';
+            } catch (error) {
+                console.error('Ошибка загрузки сообщений:', error);
+                throw error;
+            }
+        }
+        
+        function createMessageElement(msg) {
+            const div = document.createElement('div');
+            div.className = 'message';
+            
+            // Форматируем время
+            const time = msg.created_at ? 
+                new Date(msg.created_at).toLocaleString('ru-RU', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'Только что';
+            
+            div.innerHTML = `
+                <div class="message-text">${msg.content || ''}</div>
+                <div class="message-meta">
+                    <span>${msg.is_anonymous ? '👤 Аноним' : '👤 Пользователь OK'}</span>
+                    <span>${time}</span>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        // ========== МОДАЛЬНЫЕ ОКНА ==========
+        function showSendModal() {
+            document.getElementById('sendModal').style.display = 'flex';
+            document.getElementById('messageInput').focus();
+        }
+        
+        function hideModal() {
+            document.getElementById('sendModal').style.display = 'none';
+            document.getElementById('messageInput').value = '';
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text || text.length < 3) {
+                showNotification('Сообщение слишком короткое', 'warning');
+                return;
             }
             
-            // Обновляем при изменениях
-            const observer = new MutationObserver(updateHeight);
+            if (text.length > 500) {
+                showNotification('Сообщение слишком длинное', 'warning');
+                return;
+            }
+            
+            try {
+                showLoader(true, 'Отправка...');
+                
+                const messageData = {
+                    content: text,
+                    sender_id: currentUser.id,
+                    sender_name: currentUser.name,
+                    is_anonymous: true,
+                    is_active: true,
+                    created_at: new Date().toISOString()
+                };
+                
+                const { data, error } = await supabase
+                    .from('messages')
+                    .insert(messageData);
+                
+                if (error) throw error;
+                
+                // Добавляем сообщение в начало
+                const container = document.getElementById('messages-container');
+                const messageElement = createMessageElement(messageData);
+                container.insertBefore(messageElement, container.firstChild);
+                
+                // Очищаем и скрываем
+                input.value = '';
+                hideModal();
+                showLoader(false);
+                
+                showNotification('✅ Послание отправлено в океан!', 'success');
+                
+                // Адаптируем высоту
+                adjustIframeHeight();
+                
+            } catch (error) {
+                console.error('Ошибка отправки:', error);
+                showLoader(false);
+                showNotification('❌ Ошибка отправки', 'error');
+            }
+        }
+        
+        async function getRandomMessage() {
+            try {
+                showLoader(true, 'Ловим послание...');
+                
+                // Получаем все активные сообщения
+                const { data: messages, error } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .eq('is_active', true)
+                    .neq('sender_id', currentUser.id);
+                
+                if (error) throw error;
+                
+                if (messages && messages.length > 0) {
+                    // Выбираем случайное сообщение
+                    const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+                    
+                    // Добавляем в начало
+                    const container = document.getElementById('messages-container');
+                    const messageElement = createMessageElement(randomMsg);
+                    container.insertBefore(messageElement, container.firstChild);
+                    
+                    showNotification('🎣 Поймано новое послание!', 'success');
+                    
+                } else {
+                    showNotification('🌊 В океане пока нет посланий', 'info');
+                }
+                
+                showLoader(false);
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showLoader(false);
+                showNotification('❌ Ошибка при ловле послания', 'error');
+            }
+        }
+        
+        // ========== ДЕМО-РЕЖИМ ==========
+        function showDemoMessages() {
+            const container = document.getElementById('messages-container');
+            const demoMessages = [
+                {
+                    content: "Привет из OK.ru! Как ваши дела?",
+                    created_at: new Date().toISOString(),
+                    is_anonymous: true
+                },
+                {
+                    content: "Анонимность — это круто! Можно говорить то, что думаешь",
+                    created_at: new Date(Date.now() - 3600000).toISOString(),
+                    is_anonymous: true
+                },
+                {
+                    content: "Кто тоже заходит сюда из Одноклассников? 🙋‍♂️",
+                    created_at: new Date(Date.now() - 7200000).toISOString(),
+                    is_anonymous: true
+                }
+            ];
+            
+            container.innerHTML = '';
+            demoMessages.forEach(msg => {
+                container.appendChild(createMessageElement(msg));
+            });
+        }
+        
+        // ========== IFRAME АДАПТАЦИЯ ==========
+        function adjustIframeHeight() {
+            // Отправляем высоту родительскому окну
+            function sendHeight() {
+                const height = document.documentElement.scrollHeight;
+                
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'resize',
+                        height: height,
+                        source: 'vmeste-ok'
+                    }, '*');
+                    
+                    console.log('📐 Отправлена высота:', height);
+                }
+            }
+            
+            // Используем MutationObserver для отслеживания изменений DOM
+            const observer = new MutationObserver(sendHeight);
             observer.observe(document.body, {
                 childList: true,
                 subtree: true,
-                attributes: true
+                attributes: true,
+                characterData: true
             });
             
-            // Обновляем при ресайзе
-            window.addEventListener('resize', updateHeight);
+            // Также на изменения размеров окна
+            window.addEventListener('resize', sendHeight);
             
-            // Первоначальное обновление
-            setTimeout(updateHeight, 100);
+            // Первоначальная отправка
+            setTimeout(sendHeight, 100);
+            setTimeout(sendHeight, 500); // Дополнительная отправка после загрузки
         }
         
-        // Обработчик сообщений от родительского окна
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'getHeight') {
-                const height = document.documentElement.scrollHeight;
-                event.source.postMessage({
-                    type: 'heightResponse',
-                    height: height
-                }, event.origin);
-            }
+        // ========== ЗАПУСК ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 ВМесте OK запущен');
+            initApp();
         });
+        
+        // Делаем функции доступными глобально
+        window.showSendModal = showSendModal;
+        window.getRandomMessage = getRandomMessage;
+        window.hideModal = hideModal;
+        window.sendMessage = sendMessage;
     </script>
 </body>
 </html>
