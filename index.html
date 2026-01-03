@@ -149,15 +149,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         await waitForOKSDK();
-        initOK();
+        loadProfile(); // ❗ сразу
     } catch (e) {
         console.error(e);
-        setError(
-            'OK SDK недоступен.\n' +
-            'Проверьте, что игра открыта через OK.ru'
-        );
+        setError('OK SDK недоступен');
     }
 });
+
 
 function initOK() {
     setLoading('Подключение к OK…');
