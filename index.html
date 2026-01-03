@@ -31,7 +31,20 @@
             width: 80px;
             height: 80px;
             object-fit: cover;
-            border: 2px solid #0078ff;
+            border: 2px solid #ee8208;
+        }
+        .avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ee8208 0%, #f6b044 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #ee8208;
         }
         .user-card h2 {
             margin: 0;
@@ -43,18 +56,14 @@
             font-size: 1em;
             border-radius: 8px;
             border: none;
-            background-color: #0078ff;
+            background-color: #ee8208;
             color: white;
             cursor: pointer;
             transition: 0.2s;
             margin-top: 20px;
         }
         button:hover {
-            background-color: #005bb5;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+            background-color: #d67307;
         }
         .message-box {
             background: #fff;
@@ -66,153 +75,278 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        .error {
-            color: #e74c3c;
-            background: #fee;
+        .status {
+            max-width: 400px;
+            width: 100%;
             padding: 10px;
             border-radius: 8px;
             margin: 10px 0;
+            text-align: center;
         }
-        .info {
-            color: #3498db;
+        .loading {
             background: #e6f4ff;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
+            color: #3498db;
+        }
+        .success {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        .error {
+            background: #fee;
+            color: #e74c3c;
         }
     </style>
 </head>
 <body>
 
 <div class="user-card">
-    <img id="userAvatar" src="https://via.placeholder.com/80" alt="Avatar">
+    <div class="avatar-placeholder" id="avatarPlaceholder">OK</div>
+    <img id="userAvatar" style="display: none;" alt="Avatar">
     <h2 id="userName">Загрузка...</h2>
 </div>
 
 <div class="message-box" id="messageBox">
-    Добро пожаловать в приложение!
+    Добро пожаловать в приложение ВМесте!
 </div>
 
-<div id="statusArea"></div>
+<div id="statusArea" class="status loading">
+    Инициализация приложения...
+</div>
 
 <button id="randomMessageBtn">Случайное сообщение</button>
 
 <script>
-const YOUR_OK_APP_ID = 512004483266;
+// ID вашего приложения OK
+const OK_APP_ID = 512004483266;
 
 // Функция для отображения статуса
-function showStatus(message, type = 'info') {
+function showStatus(message, type = 'loading') {
     const statusArea = document.getElementById('statusArea');
-    statusArea.innerHTML = `<div class="${type}">${message}</div>`;
+    statusArea.textContent = message;
+    statusArea.className = `status ${type}`;
 }
 
-// Функция инициализации через VK Bridge (поскольку вы используете VK Mini Apps)
-function initVKApp() {
-    showStatus('Инициализация приложения...');
+// Функция для получения параметров из URL
+function getUrlParams() {
+    const params = {};
+    const queryString = window.location.search.substring(1);
+    const pairs = queryString.split('&');
     
-    // Проверяем наличие VK Bridge
-    if (typeof vkBridge !== 'undefined') {
-        vkBridge.send("VKWebAppInit", {});
+    for (const pair of pairs) {
+        const [key, value] = pair.split('=');
+        if (key && value) {
+            params[key] = decodeURIComponent(value);
+        }
+    }
+    
+    return params;
+}
+
+// Функция для получения информации о пользователе через OK API
+async function getOKUserInfo() {
+    showStatus('Получение данных пользователя из OK...', 'loading');
+    
+    try {
+        // Параметры из URL
+        const params = getUrlParams();
+        const okUserId = params.vk_ok_user_id || params.vk_user_id;
         
-        // Получаем информацию о пользователе
-        vkBridge.send("VKWebAppGetUserInfo", {})
-            .then(data => {
-                if (data.user) {
-                    document.getElementById('userName').textContent = 
-                        `${data.user.first_name} ${data.user.last_name}`;
-                    if (data.user.photo_200) {
-                        document.getElementById('userAvatar').src = data.user.photo_200;
-                    }
-                    showStatus('Пользователь загружен успешно');
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка получения пользователя:', error);
-                showStatus('Не удалось получить данные пользователя', 'error');
-            });
-    } else {
-        // Fallback на использование параметров из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const userName = urlParams.get('user_name');
-        const userId = urlParams.get('vk_user_id');
+        console.log('Параметры URL:', params);
+        console.log('OK User ID:', okUserId);
         
-        if (userName) {
-            document.getElementById('userName').textContent = decodeURIComponent(userName);
+        if (!okUserId) {
+            throw new Error('ID пользователя не найден в параметрах');
         }
         
-        // Пробуем использовать OK API напрямую
-        tryInitOKAPI();
-    }
-}
-
-// Функция для попытки инициализации OK API
-function tryInitOKAPI() {
-    // Проверяем наличие OKSDK
-    if (typeof OKSDK === 'undefined') {
-        // Пытаемся загрузить SDK динамически
-        const script = document.createElement('script');
-        script.src = 'https://connect.ok.ru/connect.js';
-        script.onload = function() {
-            if (typeof OKSDK !== 'undefined') {
-                OKSDK.init({
-                    appId: YOUR_OK_APP_ID,
-                    appKey: '',
-                    onSuccess: function() {
-                        console.log('OKSDK инициализирован');
-                        getOKUserInfo();
-                    },
-                    onFail: function(error) {
-                        console.error('Ошибка OKSDK:', error);
-                        showStatus('Не удалось подключиться к OK.ru', 'error');
-                    }
-                });
-            }
-        };
-        script.onerror = function() {
-            showStatus('Не удалось загрузить OK SDK', 'error');
-        };
-        document.head.appendChild(script);
-    } else {
-        // SDK уже загружен
-        OKSDK.init({
-            appId: YOUR_OK_APP_ID,
-            appKey: '',
-            onSuccess: getOKUserInfo,
-            onFail: function(error) {
-                console.error('Ошибка OKSDK:', error);
-            }
-        });
-    }
-}
-
-// Получение информации о пользователе OK.ru
-function getOKUserInfo() {
-    OKSDK.API({
-        method: 'users.getLoggedInUser',
-        async: true,
-        callback: function(response) {
-            if (response && response.uid) {
-                // Получаем детальную информацию о пользователе
-                OKSDK.API({
+        // Проверяем наличие OK SDK
+        if (typeof window.OK === 'undefined' || typeof window.OKSDK === 'undefined') {
+            throw new Error('OK SDK не загружен');
+        }
+        
+        // Получаем информацию о пользователе
+        return new Promise((resolve, reject) => {
+            if (window.OK && window.OK.Api) {
+                // Для глобального OK объекта
+                window.OK.Api.call({
                     method: 'users.getInfo',
-                    uids: response.uid,
-                    fields: 'first_name,last_name,pic_2',
-                    async: true,
-                    callback: function(userResponse) {
-                        if (userResponse && userResponse.length > 0) {
-                            const user = userResponse[0];
-                            document.getElementById('userName').textContent = 
-                                `${user.first_name} ${user.last_name}`;
-                            if (user.pic_2) {
-                                document.getElementById('userAvatar').src = user.pic_2;
-                            }
-                            showStatus('Данные OK.ru загружены');
+                    uids: okUserId,
+                    fields: 'first_name,last_name,pic_2,pic_3',
+                    callback: function(response) {
+                        if (response && response.length > 0 && response[0]) {
+                            resolve(response[0]);
+                        } else {
+                            reject(new Error('Не удалось получить данные пользователя'));
                         }
                     }
                 });
+            } else if (window.OKSDK) {
+                // Для OKSDK объекта
+                OKSDK.API({
+                    method: 'users.getInfo',
+                    uids: okUserId,
+                    fields: 'first_name,last_name,pic_2,pic_3',
+                    callback: function(response) {
+                        if (response && response.length > 0 && response[0]) {
+                            resolve(response[0]);
+                        } else {
+                            reject(new Error('Не удалось получить данные пользователя через OKSDK'));
+                        }
+                    }
+                });
+            } else {
+                reject(new Error('API OK не доступен'));
             }
+        });
+        
+    } catch (error) {
+        console.error('Ошибка при получении данных пользователя:', error);
+        throw error;
+    }
+}
+
+// Функция для отображения данных пользователя
+function displayUserInfo(user) {
+    if (!user) {
+        showStatus('Данные пользователя не получены', 'error');
+        return;
+    }
+    
+    // Имя и фамилия
+    const fullName = `${user.first_name} ${user.last_name}`;
+    document.getElementById('userName').textContent = fullName;
+    console.log('Получены данные пользователя:', user);
+    
+    // Аватар
+    const avatarImg = document.getElementById('userAvatar');
+    const placeholder = document.getElementById('avatarPlaceholder');
+    
+    // Используем лучшее доступное фото
+    const avatarUrl = user.pic_3 || user.pic_2;
+    
+    if (avatarUrl) {
+        avatarImg.src = avatarUrl;
+        avatarImg.onload = function() {
+            avatarImg.style.display = 'block';
+            placeholder.style.display = 'none';
+            showStatus(`Добро пожаловать, ${user.first_name}!`, 'success');
+        };
+        avatarImg.onerror = function() {
+            // Если фото не загрузилось, показываем placeholder
+            placeholder.textContent = user.first_name[0] + user.last_name[0];
+            placeholder.style.display = 'flex';
+            avatarImg.style.display = 'none';
+            showStatus(`Добро пожаловать, ${user.first_name}! (аватар не загружен)`, 'success');
+        };
+    } else {
+        // Если нет фото, показываем инициалы в placeholder
+        placeholder.textContent = user.first_name[0] + user.last_name[0];
+        placeholder.style.display = 'flex';
+        avatarImg.style.display = 'none';
+        showStatus(`Добро пожаловать, ${user.first_name}!`, 'success');
+    }
+}
+
+// Функция инициализации OK SDK
+function initOKSDK() {
+    return new Promise((resolve, reject) => {
+        // Проверяем, уже ли загружен SDK
+        if (typeof window.OK !== 'undefined' || typeof window.OKSDK !== 'undefined') {
+            console.log('OK SDK уже загружен');
+            resolve();
+            return;
         }
+        
+        showStatus('Загрузка OK SDK...', 'loading');
+        
+        // Загружаем OK SDK
+        const script = document.createElement('script');
+        script.src = 'https://connect.ok.ru/connect.js';
+        
+        script.onload = function() {
+            console.log('OK SDK загружен успешно');
+            
+            // Даем время на инициализацию
+            setTimeout(() => {
+                // Пробуем разные варианты инициализации
+                if (typeof window.okAsyncInit === 'function') {
+                    window.okAsyncInit();
+                }
+                
+                if (typeof window.OKSDK !== 'undefined') {
+                    // Инициализируем OKSDK
+                    try {
+                        OKSDK.init({
+                            appId: OK_APP_ID,
+                            appKey: '',
+                            onSuccess: function() {
+                                console.log('OKSDK инициализирован');
+                                resolve();
+                            },
+                            onFail: function(error) {
+                                console.error('Ошибка инициализации OKSDK:', error);
+                                resolve(); // Все равно разрешаем, может другие методы сработают
+                            }
+                        });
+                    } catch (e) {
+                        console.log('OKSDK.init вызвал ошибку, но продолжаем:', e);
+                        resolve();
+                    }
+                } else {
+                    resolve();
+                }
+            }, 500);
+        };
+        
+        script.onerror = function() {
+            console.error('Не удалось загрузить OK SDK');
+            reject(new Error('Не удалось загрузить OK SDK'));
+        };
+        
+        document.head.appendChild(script);
     });
+}
+
+// Основная функция инициализации
+async function initApp() {
+    try {
+        // Получаем параметры из URL
+        const params = getUrlParams();
+        console.log('Все параметры URL:', params);
+        
+        // Проверяем, что мы в OK
+        if (params.vk_platform !== 'desktop_web_ok') {
+            showStatus('Приложение работает в режиме OK.ru', 'error');
+            return;
+        }
+        
+        // Инициализируем OK SDK
+        await initOKSDK();
+        
+        // Получаем данные пользователя
+        const user = await getOKUserInfo();
+        
+        // Отображаем данные пользователя
+        displayUserInfo(user);
+        
+    } catch (error) {
+        console.error('Ошибка инициализации:', error);
+        
+        // Fallback: используем данные из параметров URL
+        const params = getUrlParams();
+        const userName = params.user_name;
+        
+        if (userName) {
+            document.getElementById('userName').textContent = decodeURIComponent(userName);
+            const placeholder = document.getElementById('avatarPlaceholder');
+            const nameParts = decodeURIComponent(userName).split(' ');
+            if (nameParts.length >= 2) {
+                placeholder.textContent = nameParts[0][0] + nameParts[1][0];
+            }
+            showStatus('Используются данные из параметров', 'success');
+        } else {
+            showStatus('Не удалось получить данные пользователя', 'error');
+        }
+    }
 }
 
 // Ловец случайных сообщений
@@ -222,7 +356,12 @@ function catchRandomMessage() {
         "Сегодня отличный день!",
         "Не забудь улыбнуться :)",
         "Вместе мы можем больше!",
-        "Удачи тебе в делах!"
+        "Удачи тебе в делах!",
+        "Рады видеть вас в OK!",
+        "Всего самого наилучшего!",
+        "Хорошего настроения!",
+        "Успехов во всех начинаниях!",
+        "Пусть день будет продуктивным!"
     ];
     const msg = messages[Math.floor(Math.random() * messages.length)];
     document.getElementById("messageBox").textContent = msg;
@@ -234,7 +373,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("randomMessageBtn").addEventListener("click", catchRandomMessage);
     
     // Начинаем инициализацию
-    initVKApp();
+    setTimeout(initApp, 100);
 });
 </script>
 </body>
