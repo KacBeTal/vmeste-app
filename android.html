@@ -3,525 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>ВМесте | OK.ru</title>
-    
-    <!-- OK SDK (важно!) -->
-    <script src="https://connect.ok.ru/connect.js"></script>
+    <title>🌊 ВМесте | OK.ru</title>
     
     <style>
-        /* Мобильные оптимизации */
+        /* Минимальные стили для быстрой загрузки */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            -webkit-text-size-adjust: 100%;
         }
         
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-            background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
+        body {
+            background: linear-gradient(135deg, #0c192c 0%, #1a2c42 100%);
             color: white;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .app-container {
+            padding: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        /* Быстрый заголовок */
+        .app-header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+        
+        .app-title {
+            font-size: 24px;
+            color: #EE8C3A;
+            margin: 10px 0;
+        }
+        
+        .app-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        /* Быстрые карточки */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(238, 140, 58, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Сообщение */
+        .message {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #EE8C3A;
+        }
+        
+        .message-text {
+            font-style: italic;
+            margin-bottom: 8px;
             line-height: 1.4;
         }
         
-        /* Контейнер приложения */
-        .app-container {
-            max-width: 100%;
-            min-height: 100vh;
-            padding: 15px;
-            padding-bottom: env(safe-area-inset-bottom, 15px);
-        }
-        
-        /* Хедер для мобильных */
-        .mobile-header {
-            position: sticky;
-            top: 0;
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px;
-            margin: -15px -15px 20px -15px;
-            border-bottom: 2px solid #EE8C3A;
-            z-index: 100;
-        }
-        
-        .header-content {
+        .message-meta {
+            font-size: 12px;
+            opacity: 0.7;
             display: flex;
-            align-items: center;
             justify-content: space-between;
         }
         
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .logo-icon {
-            font-size: 24px;
-            animation: wave 2s infinite;
-        }
-        
-        .logo-text {
-            font-size: 18px;
-            font-weight: 600;
-            background: linear-gradient(45deg, #EE8C3A, #4A90E2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        /* Мобильная навигация */
-        .mobile-nav {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            overflow-x: auto;
-            padding-bottom: 5px;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .nav-btn {
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 15px;
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-        
-        .nav-btn.active {
-            background: linear-gradient(45deg, #EE8C3A, #4A90E2);
-        }
-        
-        /* Карточки для мобильных */
-        .mobile-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-        }
-        
-        /* Сообщения */
-        .message-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 18px;
-            padding: 18px;
-            margin-bottom: 15px;
-            border-left: 4px solid #EE8C3A;
-            transition: transform 0.2s;
-        }
-        
-        .message-card:active {
-            transform: scale(0.98);
-        }
-        
-        /* Кнопки для мобильных */
-        .mobile-btn {
+        /* Кнопки */
+        .btn {
             width: 100%;
-            padding: 18px;
+            padding: 16px;
             border: none;
-            border-radius: 18px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 10px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: transform 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            -webkit-tap-highlight-color: transparent;
+            gap: 8px;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
         }
         
         .btn-primary {
-            background: linear-gradient(45deg, #EE8C3A, #EE6B3A);
+            background: linear-gradient(45deg, #EE8C3A, #FF9E5C);
             color: white;
-        }
-        
-        .btn-primary:active {
-            transform: translateY(2px);
         }
         
         .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        /* Адаптивные изображения */
-        img {
-            max-width: 100%;
-            height: auto;
+        /* Статус */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(238, 140, 58, 0.2);
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #50E3C2;
+            animation: pulse 2s infinite;
         }
         
         /* Анимации */
-        @keyframes wave {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-3px); }
-        }
-        
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
-        /* Safe areas для iPhone */
-        .safe-bottom {
-            padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
-        /* Скрыть скроллбар в Chrome на Android */
-        ::-webkit-scrollbar {
-            display: none;
+        /* Индикатор загрузки */
+        .loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            gap: 15px;
         }
         
-        /* Медиа-запросы для разных размеров iframe OK */
+        .loader-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(238, 140, 58, 0.2);
+            border-top: 3px solid #EE8C3A;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Мобильная оптимизация */
         @media (max-width: 400px) {
             .app-container {
                 padding: 10px;
             }
             
-            .mobile-header {
-                padding: 12px;
-                margin: -10px -10px 15px -10px;
+            .card {
+                padding: 15px;
             }
             
-            .logo-text {
-                font-size: 16px;
-            }
-            
-            .mobile-btn {
-                padding: 16px;
+            .btn {
+                padding: 14px;
                 font-size: 15px;
-            }
-        }
-        
-        /* Пейзажная ориентация */
-        @media (orientation: landscape) and (max-height: 500px) {
-            .mobile-header {
-                position: static;
-            }
-            
-            .mobile-nav {
-                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app-container safe-bottom">
-        <!-- Мобильный хедер -->
-        <div class="mobile-header">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon">🌊</div>
-                    <div class="logo-text">ВМесте</div>
-                </div>
-                <div class="ok-badge" id="ok-status">
-                    <span style="color: #EE8C3A">●</span> OK.ru
-                </div>
-            </div>
-            
-            <!-- Быстрая навигация -->
-            <div class="mobile-nav">
-                <button class="nav-btn active" onclick="showSection('ocean')">🌊 Океан</button>
-                <button class="nav-btn" onclick="showSection('profile')">👤 Профиль</button>
-                <button class="nav-btn" onclick="showSection('messages')">💬 Мои</button>
-                <button class="nav-btn" onclick="showSection('stats')">📊 Статистика</button>
+    <div class="app-container" id="app">
+        <!-- Заголовок -->
+        <div class="app-header">
+            <div style="font-size: 32px; margin-bottom: 5px;">🌊</div>
+            <h1 class="app-title">ВМесте</h1>
+            <p class="app-subtitle">Анонимные послания в OK.ru</p>
+            <div class="status" id="connection-status">
+                <div class="status-dot"></div>
+                <span>Подключение...</span>
             </div>
         </div>
         
         <!-- Основной контент -->
         <div id="content">
-            <!-- Секция будет загружаться динамически -->
+            <!-- Динамически загружаемый контент -->
         </div>
         
-        <!-- Фиксированные кнопки действий -->
-        <div style="position: fixed; bottom: 20px; left: 15px; right: 15px; z-index: 90;">
-            <button class="mobile-btn btn-primary" onclick="sendMessage()">
+        <!-- Быстрые действия -->
+        <div style="margin-top: 20px;">
+            <button class="btn btn-primary" onclick="sendMessage()">
                 ✍️ Бросить послание
             </button>
-            <button class="mobile-btn btn-secondary" onclick="catchMessage()">
+            <button class="btn btn-secondary" onclick="catchMessage()">
                 🎣 Поймать послание
             </button>
         </div>
     </div>
 
     <script>
-        // ========== ИНИЦИАЛИЗАЦИЯ OK SDK ==========
-        function initOK() {
-            console.log('🚀 Инициализация OK SDK...');
-            
-            // Проверяем, что мы в iframe OK
-            const params = new URLSearchParams(window.location.search);
-            const isOK = params.has('api_server') || params.has('viewer_id');
-            
-            if (!isOK) {
-                console.warn('⚠️ Приложение запущено вне OK.ru');
-                showAlert('Запустите приложение через OK.ru для полного функционала');
-                return null;
-            }
-            
-            // Инициализируем OK SDK
-            if (typeof OK === 'undefined') {
-                console.error('❌ OK SDK не загружен');
-                return null;
-            }
-            
-            try {
-                OK.init({
-                    appId: 'YOUR_OK_APP_ID', // Ваш App ID из OK
-                    appKey: 'YOUR_APP_KEY',   // Ваш App Key
-                    appSecret: 'YOUR_SECRET'   // Ваш секретный ключ
-                });
-                
-                console.log('✅ OK SDK инициализирован');
-                return OK;
-            } catch (error) {
-                console.error('❌ Ошибка инициализации OK:', error);
-                return null;
-            }
-        }
+        // ========== КОНФИГУРАЦИЯ ==========
+        const APP_CONFIG = {
+            // Безопасные настройки без Supabase
+            apiUrl: 'https://ваш-сервер.рф/api',
+            okAppId: '', // Ваш APP_ID из OK
+            useMockData: true // Использовать тестовые данные пока
+        };
         
-        // ========== ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ ==========
-        async function getOKUserData() {
-            const params = new URLSearchParams(window.location.search);
+        // ========== ПОЛУЧЕНИЕ ДАННЫХ ИЗ OK ==========
+        function getOKParams() {
+            const urlParams = new URLSearchParams(window.location.search);
             
-            // Получаем данные из параметров OK
-            const viewerId = params.get('viewer_id');
-            const sessionKey = params.get('session_key');
-            const authKey = params.get('auth_key');
-            
-            console.log('📱 Параметры OK:', {
-                viewerId,
-                sessionKey: sessionKey ? 'Есть' : 'Нет',
-                authKey: authKey ? 'Есть' : 'Нет'
-            });
-            
-            if (!viewerId) {
-                console.warn('⚠️ viewer_id не найден');
-                return null;
-            }
-            
-            // Формируем базовые данные
-            const userData = {
-                ok_id: viewerId,
-                viewer_id: viewerId,
-                session_key: sessionKey,
-                auth_key: authKey,
-                is_ok_user: true,
-                first_name: 'Пользователь',
-                last_name: 'Одноклассники',
-                full_name: 'Пользователь OK.ru',
-                avatar_url: `https://i.mycdn.me/i?r=AZr9iF4BvQh5iC87l1C7n8ZJZ94pGjHhXFOvjKm9Vy3G&t=2&f=2&fn=user${viewerId}`
+            // Основные параметры от OK
+            const params = {
+                viewer_id: urlParams.get('viewer_id') || urlParams.get('uid'),
+                session_key: urlParams.get('session_key'),
+                auth_key: urlParams.get('auth_key'),
+                api_server: urlParams.get('api_server'),
+                is_app_user: urlParams.get('is_app_user') === '1',
+                referrer: urlParams.get('referrer'),
+                location: urlParams.get('location')
             };
             
-            // Пробуем получить больше данных через OK API
-            try {
-                if (sessionKey) {
-                    // Запрос к OK API для получения информации о пользователе
-                    const response = await fetch(
-                        `https://api.ok.ru/fb.do?method=users.getCurrentUser&application_key=YOUR_APP_KEY&format=json&sig=${calculateSig()}`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            },
-                            body: `access_token=${sessionKey}`
-                        }
-                    );
+            console.log('📱 Параметры от OK:', params);
+            
+            // Если параметров нет - демо режим
+            if (!params.viewer_id) {
+                console.warn('⚠️ Параметры OK не найдены, включаю демо-режим');
+                return {
+                    viewer_id: 'demo_user_' + Date.now(),
+                    is_app_user: false,
+                    demo_mode: true
+                };
+            }
+            
+            return params;
+        }
+        
+        // ========== БЫСТРАЯ ЗАГРУЗКА ==========
+        function showLoading(message = 'Загрузка...') {
+            document.getElementById('content').innerHTML = `
+                <div class="loader">
+                    <div class="loader-spinner"></div>
+                    <div>${message}</div>
+                </div>
+            `;
+            
+            document.getElementById('connection-status').innerHTML = `
+                <div class="status-dot" style="background: #EE8C3A"></div>
+                <span>${message}</span>
+            `;
+        }
+        
+        function showMainContent() {
+            const params = getOKParams();
+            const isDemo = params.demo_mode;
+            
+            let userName = 'Пользователь OK';
+            let userAvatar = 'https://ui-avatars.com/api/?name=OK+User&background=EE8C3A&color=fff&size=200';
+            
+            // Если есть viewer_id, можем показать ID
+            if (params.viewer_id && !isDemo) {
+                userName = `Пользователь #${params.viewer_id.slice(-6)}`;
+            }
+            
+            document.getElementById('content').innerHTML = `
+                <div class="card">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <img src="${userAvatar}" alt="${userName}" 
+                             style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #EE8C3A;">
+                        <div>
+                            <h3 style="color: #EE8C3A;">${userName}</h3>
+                            <div style="font-size: 12px; opacity: 0.8;">
+                                ${isDemo ? '🔸 Демо-режим' : '✅ Подключено к OK.ru'}
+                            </div>
+                        </div>
+                    </div>
                     
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('✅ Данные из OK API:', data);
-                        
-                        // Обновляем данные пользователя
-                        if (data.first_name) userData.first_name = data.first_name;
-                        if (data.last_name) userData.last_name = data.last_name;
-                        userData.full_name = `${userData.first_name} ${userData.last_name}`;
-                        
-                        if (data.pic_1) userData.avatar_url = data.pic_1;
-                        if (data.location && data.location.city) {
-                            userData.location = data.location.city;
-                        }
-                    }
-                }
-            } catch (error) {
-                console.warn('⚠️ Не удалось получить данные из OK API:', error);
-            }
-            
-            return userData;
-        }
-        
-        // ========== ОТОБРАЖЕНИЕ КОНТЕНТА ==========
-        function showSection(section) {
-            const content = document.getElementById('content');
-            const navBtns = document.querySelectorAll('.nav-btn');
-            
-            // Обновляем активную кнопку
-            navBtns.forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.textContent.includes(getSectionEmoji(section))) {
-                    btn.classList.add('active');
-                }
-            });
-            
-            // Показываем секцию
-            content.innerHTML = getSectionHTML(section);
-            content.style.animation = 'fadeIn 0.3s ease';
-        }
-        
-        function getSectionEmoji(section) {
-            const emojis = {
-                'ocean': '🌊',
-                'profile': '👤',
-                'messages': '💬',
-                'stats': '📊'
-            };
-            return emojis[section] || '📱';
-        }
-        
-        function getSectionHTML(section) {
-            const sections = {
-                'ocean': `
-                    <div class="mobile-card">
-                        <h3 style="margin-bottom: 15px; color: #EE8C3A;">🌊 Океан посланий</h3>
-                        <p style="margin-bottom: 15px; opacity: 0.8;">
-                            Здесь собраны все послания от пользователей OK.ru
-                        </p>
-                        <div id="ocean-messages">
-                            <div class="message-card">
-                                <div style="font-style: italic; margin-bottom: 10px;">
-                                    "Добро пожаловать в океан посланий! Здесь вы можете найти интересные сообщения от других пользователей."
-                                </div>
-                                <div style="font-size: 12px; opacity: 0.7; display: flex; justify-content: space-between;">
-                                    <span>👤 Аноним</span>
-                                    <span>Только что</span>
-                                </div>
-                            </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0;">
+                        <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                            <div style="font-size: 20px; font-weight: bold; color: #EE8C3A;">0</div>
+                            <div style="font-size: 11px; opacity: 0.8;">Посланий</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                            <div style="font-size: 20px; font-weight: bold; color: #EE8C3A;">0</div>
+                            <div style="font-size: 11px; opacity: 0.8;">Поймано</div>
                         </div>
                     </div>
-                `,
+                </div>
                 
-                'profile': `
-                    <div class="mobile-card">
-                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                            <img id="user-avatar" src="" alt="Avatar" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #EE8C3A;">
-                            <div>
-                                <h3 id="user-name" style="color: #EE8C3A;">Загрузка...</h3>
-                                <p id="user-location" style="font-size: 14px; opacity: 0.8;">📍 OK.ru</p>
-                            </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 15px; color: #EE8C3A;">🌊 Последние послания</h3>
+                    
+                    <div class="message">
+                        <div class="message-text">
+                            "Добро пожаловать в приложение! Здесь можно делиться мыслями анонимно."
                         </div>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0;">
-                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; text-align: center;">
-                                <div style="font-size: 24px; font-weight: bold; color: #EE8C3A;" id="sent-count">0</div>
-                                <div style="font-size: 12px; opacity: 0.7;">Отправлено</div>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; text-align: center;">
-                                <div style="font-size: 24px; font-weight: bold; color: #EE8C3A;" id="caught-count">0</div>
-                                <div style="font-size: 12px; opacity: 0.7;">Поймано</div>
-                            </div>
+                        <div class="message-meta">
+                            <span>👤 Аноним</span>
+                            <span>Только что</span>
                         </div>
                     </div>
-                `
-            };
+                    
+                    <div class="message">
+                        <div class="message-text">
+                            "Кто тоже заходит сюда из Одноклассников? 📱"
+                        </div>
+                        <div class="message-meta">
+                            <span>👤 OK-пользователь</span>
+                            <span>5 минут назад</span>
+                        </div>
+                    </div>
+                </div>
+            `;
             
-            return sections[section] || sections['ocean'];
+            document.getElementById('connection-status').innerHTML = `
+                <div class="status-dot"></div>
+                <span>${isDemo ? 'Демо-режим' : 'Подключено к OK.ru'}</span>
+            `;
         }
         
-        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
-        function showAlert(message) {
-            alert(message); // В production заменить на красивый попап
-        }
-        
+        // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
         function sendMessage() {
-            const message = prompt('Введите ваше послание для океана:');
-            if (message && message.trim()) {
-                showAlert('✅ Послание отправлено в океан!');
-                // Здесь будет отправка на сервер
+            const message = prompt('Напишите ваше послание для океана:');
+            
+            if (message && message.trim().length > 2) {
+                // Простая имитация отправки
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.style.animation = 'fadeIn 0.5s ease';
+                
+                messageDiv.innerHTML = `
+                    <div class="message-text">"${message}"</div>
+                    <div class="message-meta">
+                        <span>👤 Вы</span>
+                        <span>Только что</span>
+                    </div>
+                `;
+                
+                // Добавляем в начало
+                const messagesContainer = document.querySelector('.card:last-child');
+                if (messagesContainer) {
+                    messagesContainer.insertBefore(messageDiv, messagesContainer.firstChild);
+                }
+                
+                // Показываем уведомление
+                showQuickAlert('✅ Послание отправлено в океан!');
             }
         }
         
         function catchMessage() {
-            showAlert('🎣 Ловим послание из океана...');
-            // Здесь будет запрос случайного сообщения
-        }
-        
-        // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('📱 Мобильное приложение загружено');
+            const messages = [
+                "Привет из ОК! Как дела?",
+                "Кто-нибудь здесь тоже любит анонимное общение?",
+                "Сегодня отличный день для новых знакомств!",
+                "Поделитесь, что хорошего произошло с вами сегодня?",
+                "Анонимность — это свобода самовыражения 💫"
+            ];
             
-            // 1. Инициализируем OK
-            const ok = initOK();
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
             
-            // 2. Получаем данные пользователя
-            const userData = await getOKUserData();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.style.animation = 'fadeIn 0.5s ease';
+            messageDiv.style.borderLeftColor = '#50E3C2';
             
-            if (userData) {
-                // 3. Обновляем интерфейс
-                document.getElementById('user-name').textContent = userData.full_name;
-                document.getElementById('user-avatar').src = userData.avatar_url;
-                
-                if (userData.location) {
-                    document.getElementById('user-location').textContent = `📍 ${userData.location}`;
-                }
-                
-                // 4. Показываем статус
-                document.getElementById('ok-status').innerHTML = `
-                    <span style="color: #50E3C2">●</span> ${userData.first_name}
-                `;
+            messageDiv.innerHTML = `
+                <div class="message-text">"${randomMessage}"</div>
+                <div class="message-meta">
+                    <span>🎣 Поймано!</span>
+                    <span>Только что</span>
+                </div>
+            `;
+            
+            // Добавляем в начало
+            const messagesContainer = document.querySelector('.card:last-child');
+            if (messagesContainer) {
+                messagesContainer.insertBefore(messageDiv, messagesContainer.firstChild);
             }
             
-            // 5. Показываем начальную секцию
-            showSection('ocean');
+            // Эффект
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => btn.style.transform = '', 200);
+            });
             
-            // 6. Адаптируем под высоту iframe
-            adjustToIframeHeight();
+            showQuickAlert('🎣 Вы поймали новое послание!');
+        }
+        
+        // ========== УТИЛИТЫ ==========
+        function showQuickAlert(text) {
+            // Создаем простое уведомление
+            const alert = document.createElement('div');
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #EE8C3A;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 10px;
+                z-index: 1000;
+                animation: fadeIn 0.3s ease;
+                font-weight: 500;
+                box-shadow: 0 4px 20px rgba(238, 140, 58, 0.3);
+            `;
+            alert.textContent = text;
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.style.animation = 'fadeIn 0.3s ease reverse';
+                setTimeout(() => alert.remove(), 300);
+            }, 2000);
+        }
+        
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Приложение ВМесте загружено');
+            
+            // 1. Сразу показываем контент
+            showLoading('Подключение к OK.ru...');
+            
+            // 2. Быстрая проверка параметров
+            setTimeout(() => {
+                const params = getOKParams();
+                console.log('✅ Параметры получены:', params);
+                
+                // 3. Показываем основной контент
+                showMainContent();
+                
+                // 4. Если есть viewer_id, можно показать персонализированное приветствие
+                if (params.viewer_id && !params.demo_mode) {
+                    setTimeout(() => {
+                        showQuickAlert('👋 Добро пожаловать из OK.ru!');
+                    }, 500);
+                }
+                
+                // 5. Адаптируем высоту для iframe
+                adaptToIframe();
+                
+            }, 800); // Искусственная задержка для имитации загрузки
+            
+            // Обработка касаний для лучшего UX
+            document.addEventListener('touchstart', function() {}, {passive: true});
         });
         
-        // Адаптация под высоту iframe OK
-        function adjustToIframeHeight() {
-            const isInIframe = window.self !== window.top;
-            
-            if (isInIframe) {
-                // Отправляем высоту родительскому окну
-                function sendHeight() {
-                    const height = document.documentElement.scrollHeight;
+        // Адаптация высоты для iframe OK
+        function adaptToIframe() {
+            // Отправляем высоту родительскому окну
+            function updateHeight() {
+                const height = document.documentElement.scrollHeight;
+                
+                // Отправляем сообщение родителю (если мы в iframe)
+                if (window.parent !== window) {
                     window.parent.postMessage({
-                        type: 'resize',
-                        height: height
+                        type: 'iframeResize',
+                        height: height,
+                        app: 'vmeste-ok'
                     }, '*');
                 }
                 
-                // Отправляем при изменении контента
-                const observer = new MutationObserver(sendHeight);
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true,
-                    attributes: true
-                });
-                
-                sendHeight(); // Первоначальная отправка
+                // Также обновляем высоту самого iframe
+                document.body.style.minHeight = height + 'px';
             }
+            
+            // Обновляем при изменениях
+            const observer = new MutationObserver(updateHeight);
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true
+            });
+            
+            // Обновляем при ресайзе
+            window.addEventListener('resize', updateHeight);
+            
+            // Первоначальное обновление
+            setTimeout(updateHeight, 100);
         }
         
-        // Сигнатура для OK API (упрощенная)
-        function calculateSig() {
-            // В реальном приложении нужно рассчитывать подпись
-            return 'YOUR_SIGNATURE';
-        }
+        // Обработчик сообщений от родительского окна
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'getHeight') {
+                const height = document.documentElement.scrollHeight;
+                event.source.postMessage({
+                    type: 'heightResponse',
+                    height: height
+                }, event.origin);
+            }
+        });
     </script>
 </body>
 </html>
