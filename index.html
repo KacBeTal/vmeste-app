@@ -6,7 +6,7 @@
     <title>ВМесте 🌊 | Океан посланий из OK.ru</title>
     
     <!-- OK SDK -->
-    <script type="text/javascript" src="//api.ok.ru/js/fapi5.js" defer="defer"></script>
+    <script type="text/javascript" src="https://api.ok.ru/js/fapi5.js"></script>
     <!-- Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -234,6 +234,7 @@
             margin-bottom: 20px;
             border: 1px solid rgba(255,255,255,0.1);
             transition: transform 0.3s ease;
+            cursor: pointer;
         }
         
         .message-bubble:hover {
@@ -253,6 +254,27 @@
             justify-content: space-between;
             font-size: 14px;
             opacity: 0.7;
+        }
+        
+        .message-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .action-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255,255,255,0.2);
         }
         
         /* Action Buttons */
@@ -368,6 +390,68 @@
         @keyframes waves {
             0% { background-position-x: 0; }
             100% { background-position-x: 1200px; }
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: var(--dark);
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid var(--ok-orange);
+        }
+        
+        .modal-title {
+            color: var(--ok-orange);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* Report Modal */
+        .report-reasons {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .report-reason {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .report-reason:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--ok-orange);
+        }
+        
+        .report-reason.selected {
+            background: rgba(238, 140, 58, 0.2);
+            border-color: var(--ok-orange);
         }
     </style>
 </head>
@@ -510,15 +594,48 @@
     </div>
     
     <!-- Modals -->
-    <div id="sendMessageModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: var(--dark); padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; border: 2px solid var(--ok-orange);">
-            <h3 style="margin-bottom: 20px; color: var(--ok-orange);">✍️ Бросить послание в океан</h3>
+    <div id="sendMessageModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">✍️ Бросить послание в океан</h3>
             <textarea id="messageInput" placeholder="Что вы хотите сказать другим пользователям OK.ru?" style="width: 100%; height: 150px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 16px; resize: vertical;"></textarea>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <div class="modal-buttons">
                 <button onclick="sendMessage()" class="btn btn-primary" style="flex: 1;">
                     🌊 Отправить
                 </button>
                 <button onclick="hideModal('sendMessageModal')" class="btn btn-secondary" style="flex: 1;">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">⚠️ Пожаловаться на сообщение</h3>
+            <p style="margin-bottom: 15px; opacity: 0.8;">Выберите причину жалобы:</p>
+            
+            <div class="report-reasons">
+                <div class="report-reason" onclick="selectReportReason('spam')" id="reason-spam">
+                    🗑️ Спам
+                </div>
+                <div class="report-reason" onclick="selectReportReason('harassment')" id="reason-harassment">
+                    😡 Оскорбления
+                </div>
+                <div class="report-reason" onclick="selectReportReason('inappropriate')" id="reason-inappropriate">
+                    🔞 Неприемлемый контент
+                </div>
+                <div class="report-reason" onclick="selectReportReason('other')" id="reason-other">
+                    📝 Другое
+                </div>
+            </div>
+            
+            <textarea id="reportDescription" placeholder="Дополнительные детали (необязательно)" style="width: 100%; height: 100px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 14px; resize: vertical; margin-top: 15px; display: none;"></textarea>
+            
+            <div class="modal-buttons">
+                <button onclick="submitReport()" class="btn btn-primary" style="flex: 1;">
+                    📤 Отправить жалобу
+                </button>
+                <button onclick="hideModal('reportModal')" class="btn btn-secondary" style="flex: 1;">
                     Отмена
                 </button>
             </div>
@@ -533,6 +650,7 @@
         // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
         let supabaseClient = null;
         let okSDKInitialized = false;
+        let okSDKAttempted = false;
         let currentUser = {
             ok_id: null,
             vk_user_id: null,
@@ -543,6 +661,9 @@
             is_ok_user: false,
             ok_profile_data: null
         };
+        
+        let selectedMessageForReport = null;
+        let selectedReportReason = null;
         
         // ========== УТИЛИТЫ ==========
         function updateLoadingStatus(message) {
@@ -580,46 +701,75 @@
         }
         
         // ========== ИНИЦИАЛИЗАЦИЯ OK SDK ==========
-        async function initOKSDK() {
-            return new Promise((resolve, reject) => {
-                // Проверяем, загрузился ли SDK OK.ru
-                if (typeof FAPI === 'undefined') {
-                    console.warn('OK SDK не загружен, используем параметры URL');
+        function initOKSDK() {
+            return new Promise((resolve) => {
+                if (okSDKAttempted) {
                     resolve(false);
                     return;
                 }
                 
+                okSDKAttempted = true;
                 updateLoadingStatus('Инициализация OK SDK...');
                 
-                FAPI.init((response) => {
-                    if (response === true) {
-                        console.log('✅ OK SDK инициализирован');
-                        okSDKInitialized = true;
-                        resolve(true);
-                    } else {
-                        console.warn('❌ Ошибка инициализации OK SDK, используем параметры URL');
+                // Проверяем, загрузился ли SDK
+                if (typeof FAPI === 'undefined') {
+                    console.warn('OK SDK не загружен');
+                    updateLoadingStatus('OK SDK не доступен, используем параметры');
+                    resolve(false);
+                    return;
+                }
+                
+                console.log('OK SDK найден, инициализируем...');
+                
+                // Пытаемся инициализировать SDK
+                try {
+                    FAPI.init(function(response) {
+                        console.log('Ответ от FAPI.init:', response);
+                        if (response === true) {
+                            console.log('✅ OK SDK инициализирован');
+                            okSDKInitialized = true;
+                            resolve(true);
+                        } else {
+                            console.warn('❌ OK SDK инициализация не удалась:', response);
+                            updateLoadingStatus('Ошибка инициализации SDK');
+                            resolve(false);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Ошибка при инициализации SDK:', error);
+                    updateLoadingStatus('Ошибка SDK');
+                    resolve(false);
+                }
+                
+                // Таймаут на случай, если SDK не ответит
+                setTimeout(() => {
+                    if (!okSDKInitialized) {
+                        console.warn('Таймаут инициализации OK SDK');
                         resolve(false);
                     }
-                });
+                }, 3000);
             });
         }
         
         // ========== ПОЛУЧЕНИЕ ДАННЫХ ИЗ OK.RU SDK ==========
-        async function getOKProfileDataViaSDK() {
-            return new Promise((resolve, reject) => {
+        function getOKProfileDataViaSDK() {
+            return new Promise((resolve) => {
                 if (!okSDKInitialized || typeof FAPI === 'undefined') {
-                    console.warn('OK SDK не инициализирован');
+                    console.warn('OK SDK не инициализирован для получения данных');
                     resolve(null);
                     return;
                 }
+                
+                updateLoadingStatus('Получение данных через OK SDK...');
                 
                 try {
                     FAPI.Client.call({
                         method: 'users.getCurrentUser',
                         fields: ['uid', 'first_name', 'last_name', 'pic_1', 'pic_2', 'pic_3', 'location']
-                    }, (response) => {
+                    }, function(response) {
+                        console.log('Ответ от OK SDK:', response);
                         if (response && response.uid) {
-                            console.log('✅ Данные профиля из OK SDK получены:', response);
+                            console.log('✅ Данные профиля из OK SDK получены');
                             resolve(response);
                         } else {
                             console.warn('❌ Нет данных профиля из OK SDK');
@@ -642,8 +792,7 @@
                 params[key] = value;
             }
             
-            console.log('🔍 ПАРАМЕТРЫ ОТ OK.RU:');
-            console.table(params);
+            console.log('🔍 Параметры от OK.ru:', params);
             
             // Проверяем, что это OK.ru
             const isOK = params['vk_client'] === 'ok';
@@ -656,39 +805,37 @@
             
             if (!isAppUser) {
                 console.log('⚠️ Пользователь не авторизован в приложении');
-                return null;
+                // Все равно продолжаем, но с ограниченным доступом
             }
             
             // Получаем ID пользователя
             const okUserId = params['vk_ok_user_id'];
             const vkUserId = params['vk_user_id'];
+            const viewerId = params['viewer_id'];
             
-            if (!okUserId && !vkUserId) {
+            // Используем доступный ID
+            const userId = okUserId || vkUserId || viewerId;
+            
+            if (!userId) {
                 console.log('⚠️ Нет ID пользователя');
                 return null;
             }
             
-            console.log('✅ Пользователь OK.ru найден:', {
-                okUserId: okUserId,
-                vkUserId: vkUserId
-            });
-            
-            // Используем основной ID
-            const userId = okUserId || vkUserId;
+            console.log('✅ Пользователь OK.ru найден, ID:', userId);
             
             // Создаем базовый профиль из параметров
             const userData = {
                 ok_id: userId,
                 vk_user_id: vkUserId,
                 ok_user_id: okUserId,
+                viewer_id: viewerId,
                 first_name: 'Пользователь',
                 last_name: 'OK.ru',
                 full_name: 'Пользователь OK.ru',
                 avatar_url: getFallbackAvatarUrl('Пользователь', 'OK'),
                 is_ok_user: true,
-                is_app_user: true,
-                location: 'Одноклассники',
-                viewer_id: params['viewer_id']
+                is_app_user: isAppUser || false,
+                location: 'Одноклассники'
             };
             
             return userData;
@@ -702,7 +849,7 @@
                 userData.last_name = profileData.last_name || userData.last_name;
                 userData.full_name = `${userData.first_name} ${userData.last_name}`;
                 
-                // Получаем аватарку из OK (используем pic_1, pic_2 или pic_3)
+                // Получаем аватарку из OK
                 if (profileData.pic_1) {
                     userData.avatar_url = profileData.pic_1;
                 } else if (profileData.pic_2) {
@@ -720,7 +867,7 @@
                     userData.location = profileData.location.city;
                 }
                 
-                console.log('✅ Обновлены данные из OK SDK:', userData);
+                console.log('✅ Обновлены данные из OK SDK');
             }
             
             // Обновляем интерфейс
@@ -728,25 +875,36 @@
             
             // Аватар
             const avatarImg = document.getElementById('user-avatar');
-            avatarImg.src = userData.avatar_url;
-            avatarImg.alt = userData.full_name;
+            if (avatarImg) {
+                avatarImg.src = userData.avatar_url;
+                avatarImg.alt = userData.full_name;
+                avatarImg.onerror = function() {
+                    this.src = getFallbackAvatarUrl(userData.first_name, userData.last_name);
+                };
+            }
             
             // Местоположение
-            if (userData.location && userData.location !== 'OK.ru') {
-                document.getElementById('user-location').innerHTML = `📍 ${userData.location}`;
-            } else {
-                document.getElementById('user-location').innerHTML = '📍 Одноклассники';
+            const locationEl = document.getElementById('user-location');
+            if (locationEl) {
+                if (userData.location && userData.location !== 'OK.ru') {
+                    locationEl.innerHTML = `📍 ${userData.location}`;
+                } else {
+                    locationEl.innerHTML = '📍 Одноклассники';
+                }
             }
             
             // Статус подключения
-            const isFromSDK = profileData !== null;
-            document.getElementById('connection-status').innerHTML = `
-                <div class="status-dot" style="background: #EE8C3A"></div>
-                <span>${isFromSDK ? 'Подключено к OK.ru SDK' : 'Подключено к OK.ru'}</span>
-            `;
+            const statusEl = document.getElementById('connection-status');
+            if (statusEl) {
+                const isFromSDK = profileData !== null;
+                statusEl.innerHTML = `
+                    <div class="status-dot" style="background: #EE8C3A"></div>
+                    <span>${isFromSDK ? 'OK.ru SDK' : 'OK.ru'}</span>
+                `;
+            }
             
             // Сохраняем в глобальную переменную
-            currentUser = userData;
+            currentUser = { ...userData };
             if (profileData) {
                 currentUser.ok_profile_data = profileData;
             }
@@ -772,6 +930,7 @@
                     ok_id: currentUser.ok_id,
                     vk_user_id: currentUser.vk_user_id,
                     ok_user_id: currentUser.ok_user_id,
+                    viewer_id: currentUser.viewer_id,
                     first_name: currentUser.first_name,
                     last_name: currentUser.last_name,
                     full_name: currentUser.full_name,
@@ -779,13 +938,14 @@
                     location: currentUser.location,
                     is_online: true,
                     is_ok_user: true,
+                    is_app_user: currentUser.is_app_user || false,
                     last_seen: new Date().toISOString(),
                     created_at: new Date().toISOString()
                 };
                 
                 console.log('💾 Сохраняем профиль в БД:', profileData);
                 
-                // Пробуем вставить или обновить в таблице profiles
+                // Пробуем вставить или обновить
                 const { data, error } = await supabaseClient
                     .from('profiles')
                     .upsert(profileData, {
@@ -809,11 +969,11 @@
                         return null;
                     }
                     
-                    console.log('✅ Профиль создан:', newData);
+                    console.log('✅ Профиль создан');
                     return newData;
                 }
                 
-                console.log('✅ Профиль сохранен:', data);
+                console.log('✅ Профиль сохранен');
                 return data;
                 
             } catch (error) {
@@ -828,17 +988,21 @@
             
             try {
                 // 1. Инициализируем Supabase
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    auth: {
+                        persistSession: false
+                    }
+                });
                 console.log('✅ Supabase подключен');
                 
-                // 2. Инициализируем OK SDK
+                // 2. Пробуем инициализировать OK SDK
                 updateLoadingStatus('Инициализация OK SDK...');
                 const sdkInitialized = await initOKSDK();
                 
                 let okUserData = null;
                 let okProfileData = null;
                 
-                // 3. Пробуем получить данные через SDK
+                // 3. Если SDK инициализирован, получаем данные через него
                 if (sdkInitialized) {
                     updateLoadingStatus('Получение данных через OK SDK...');
                     okProfileData = await getOKProfileDataViaSDK();
@@ -863,10 +1027,21 @@
                 if (!okUserData) {
                     updateLoadingStatus('Получение данных из параметров...');
                     okUserData = getOKUserDataFromURL();
-                    
-                    if (!okUserData) {
-                        throw new Error('Не удалось получить данные из OK.ru');
-                    }
+                }
+                
+                if (!okUserData) {
+                    // Создаем гостевой аккаунт
+                    console.log('Создаем гостевой аккаунт');
+                    okUserData = {
+                        ok_id: 'guest_' + Date.now(),
+                        first_name: 'Гость',
+                        last_name: 'OK.ru',
+                        full_name: 'Гость OK.ru',
+                        avatar_url: getFallbackAvatarUrl('Гость', 'OK'),
+                        is_ok_user: true,
+                        is_app_user: false,
+                        location: 'Одноклассники'
+                    };
                 }
                 
                 // 5. Обновляем интерфейс с данными
@@ -880,9 +1055,9 @@
                 if (savedProfile) {
                     console.log('✅ Профиль сохранен в БД');
                     
-                    // Показываем приветствие с именем
+                    // Показываем приветствие
                     const greeting = okProfileData ? 
-                        `Добро пожаловать, ${currentUser.first_name} ${currentUser.last_name}!` :
+                        `Добро пожаловать, ${currentUser.first_name}!` :
                         `Добро пожаловать в OK.ru!`;
                     
                     showNotification(greeting, 'ok');
@@ -896,27 +1071,34 @@
                     loadOnlineCount()
                 ]);
                 
-                // 8. Показываем приложение
+                // 8. Обновляем онлайн статус
+                await updateOnlineStatus(true);
+                
+                // 9. Показываем приложение
                 showApp();
                 updateLoadingStatus('Готово!');
+                
+                // 10. Подписываемся на обновления в реальном времени
+                subscribeToRealTimeUpdates();
                 
             } catch (error) {
                 console.error('❌ Ошибка инициализации:', error);
                 updateLoadingStatus('Ошибка: ' + error.message);
                 
-                // Показываем приложение с сообщением об ошибке
+                // Показываем приложение с fallback данными
                 setTimeout(() => {
                     showApp();
-                    showNotification('Ошибка подключения к OK.ru', 'error');
                     
-                    // Показываем fallback интерфейс
+                    // Устанавливаем fallback данные
                     document.getElementById('user-name').textContent = 'Гость OK.ru';
                     document.getElementById('user-avatar').src = getFallbackAvatarUrl('Гость', 'OK');
                     document.getElementById('connection-status').innerHTML = `
                         <div class="status-dot" style="background: #FF6B8B"></div>
-                        <span>Ошибка подключения</span>
+                        <span>Гостевой режим</span>
                     `;
-                }, 1500);
+                    
+                    showNotification('Приложение запущено в гостевом режиме', 'warning');
+                }, 1000);
             }
         }
         
@@ -931,19 +1113,27 @@
             }
             
             try {
-                const { data: messages, error } = await supabaseClient
+                // Получаем статистику отправленных сообщений
+                const { data: messages, error: messagesError } = await supabaseClient
                     .from('messages')
-                    .select('*')
+                    .select('id, likes')
                     .eq('sender_ok_id', currentUser.ok_id);
                     
-                if (error) {
-                    console.error('Ошибка загрузки статистики:', error);
+                if (messagesError) {
+                    console.error('Ошибка загрузки сообщений:', messagesError);
                     return;
                 }
                 
                 const sent = messages ? messages.length : 0;
-                const caught = messages ? messages.filter(m => m.caught_by).length : 0;
                 const likes = messages ? messages.reduce((sum, m) => sum + (m.likes || 0), 0) : 0;
+                
+                // Получаем статистику пойманных сообщений
+                const { data: caughtMessages, error: caughtError } = await supabaseClient
+                    .from('messages')
+                    .select('id')
+                    .eq('caught_by', currentUser.ok_id);
+                    
+                const caught = caughtMessages ? caughtMessages.length : 0;
                 
                 document.getElementById('sent-count').textContent = sent;
                 document.getElementById('caught-count').textContent = caught;
@@ -977,6 +1167,24 @@
             }
         }
         
+        // ========== ОБНОВЛЕНИЕ ОНЛАЙН СТАТУСА ==========
+        async function updateOnlineStatus(isOnline = true) {
+            if (!currentUser.ok_id || !supabaseClient) return;
+            
+            try {
+                await supabaseClient
+                    .from('profiles')
+                    .update({
+                        is_online: isOnline,
+                        last_seen: new Date().toISOString()
+                    })
+                    .eq('ok_id', currentUser.ok_id);
+                    
+            } catch (error) {
+                console.error('Ошибка обновления онлайн статуса:', error);
+            }
+        }
+        
         // ========== ОКЕАН ПОСЛАНИЙ ==========
         async function loadOceanMessages() {
             if (!supabaseClient) return;
@@ -986,8 +1194,9 @@
                     .from('messages')
                     .select('*')
                     .eq('is_anonymous', true)
+                    .eq('is_blocked', false)
                     .order('created_at', { ascending: false })
-                    .limit(3);
+                    .limit(5);
                     
                 if (error) {
                     console.error('Ошибка загрузки сообщений:', error);
@@ -999,7 +1208,7 @@
                     display.innerHTML = '';
                     
                     messages.forEach(message => {
-                        showMessageInOcean(message, false);
+                        showMessageInOcean(message, message.caught_by === currentUser.ok_id);
                     });
                 }
                 
@@ -1015,6 +1224,9 @@
         
         function hideModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'reportModal') {
+                resetReportModal();
+            }
         }
         
         async function sendMessage() {
@@ -1056,6 +1268,14 @@
                     
                 if (error) throw error;
                 
+                // Обновляем статистику пользователя
+                await supabaseClient
+                    .from('profiles')
+                    .update({
+                        messages_sent: supabaseClient.rpc('increment', { x: 1 })
+                    })
+                    .eq('ok_id', currentUser.ok_id);
+                
                 // Показываем в океане
                 showMessageInOcean(data);
                 messageInput.value = '';
@@ -1068,7 +1288,7 @@
                 
             } catch (error) {
                 console.error('Ошибка отправки:', error);
-                showNotification('❌ Ошибка отправки', 'error');
+                showNotification('❌ Ошибка отправки: ' + error.message, 'error');
             }
         }
         
@@ -1084,13 +1304,16 @@
             }
             
             try {
+                // Получаем случайное непойманное сообщение
                 const { data: messages, error } = await supabaseClient
                     .from('messages')
                     .select('*')
                     .neq('sender_ok_id', currentUser.ok_id)
+                    .is('caught_by', null)
                     .eq('is_anonymous', true)
+                    .eq('is_blocked', false)
                     .order('created_at', { ascending: false })
-                    .limit(10);
+                    .limit(20);
                     
                 if (error) throw error;
                 
@@ -1098,13 +1321,34 @@
                     const randomIndex = Math.floor(Math.random() * messages.length);
                     const message = messages[randomIndex];
                     
-                    showMessageInOcean(message, true);
+                    // Помечаем как пойманное
+                    const { data: updatedMessage, error: updateError } = await supabaseClient
+                        .from('messages')
+                        .update({
+                            caught_by: currentUser.ok_id,
+                            caught_at: new Date().toISOString(),
+                            catch_count: (message.catch_count || 0) + 1
+                        })
+                        .eq('id', message.id)
+                        .select()
+                        .single();
+                        
+                    if (updateError) throw updateError;
+                    
+                    // Обновляем статистику пользователя
+                    await supabaseClient
+                        .from('profiles')
+                        .update({
+                            messages_caught: supabaseClient.rpc('increment', { x: 1 })
+                        })
+                        .eq('ok_id', currentUser.ok_id);
+                    
+                    showMessageInOcean(updatedMessage, true);
                     
                     showNotification('🎣 Вы поймали послание из OK.ru!', 'success');
                     
-                    // Обновляем статистику пойманных
-                    const currentCaught = parseInt(document.getElementById('caught-count').textContent) || 0;
-                    document.getElementById('caught-count').textContent = currentCaught + 1;
+                    // Обновляем статистику
+                    await loadUserStats();
                     
                 } else {
                     const demoMessage = {
@@ -1116,7 +1360,7 @@
                 }
                 
             } catch (error) {
-                console.error('Ошибка:', error);
+                console.error('Ошибка при ловле послания:', error);
                 showNotification('❌ Ошибка при ловле послания', 'error');
             }
         }
@@ -1130,15 +1374,28 @@
                 minute: '2-digit'
             });
             
+            const messageId = message.id || 'demo';
+            const isMine = message.sender_ok_id === currentUser.ok_id;
+            
             const messageHtml = `
-                <div class="message-bubble">
+                <div class="message-bubble" id="message-${messageId}" data-message-id="${messageId}" onclick="showMessageOptions('${messageId}')">
                     <div class="message-content">
                         "${message.content}"
                     </div>
                     <div class="message-meta">
-                        <span>${isCaught ? '🎣 Поймано из OK.ru' : '🌊 В океане OK.ru'}</span>
+                        <span>${isCaught ? '🎣 Поймано' : isMine ? '📤 Ваше послание' : '🌊 В океане'}</span>
                         <span>${time}</span>
                     </div>
+                    ${!isMine ? `
+                    <div class="message-actions">
+                        <button class="action-btn" onclick="likeMessage('${messageId}'); event.stopPropagation();">
+                            ❤️ ${message.likes || 0}
+                        </button>
+                        <button class="action-btn" onclick="showReportModal('${messageId}'); event.stopPropagation();">
+                            ⚠️ Пожаловаться
+                        </button>
+                    </div>
+                    ` : ''}
                 </div>
             `;
             
@@ -1151,6 +1408,194 @@
             }
         }
         
+        // ========== ЛАЙКИ ==========
+        async function likeMessage(messageId) {
+            if (!currentUser.ok_id || !supabaseClient || !messageId) return false;
+            
+            try {
+                // Проверяем, не лайкал ли уже
+                const { data: existingLike, error: checkError } = await supabaseClient
+                    .from('likes')
+                    .select('id')
+                    .eq('message_id', messageId)
+                    .eq('user_ok_id', currentUser.ok_id)
+                    .single();
+                    
+                if (existingLike) {
+                    showNotification('Вы уже лайкнули это сообщение', 'info');
+                    return false;
+                }
+                
+                // Добавляем лайк
+                const { data, error } = await supabaseClient
+                    .from('likes')
+                    .insert({
+                        message_id: messageId,
+                        user_ok_id: currentUser.ok_id
+                    })
+                    .select()
+                    .single();
+                    
+                if (error) throw error;
+                
+                // Обновляем счетчик лайков в сообщении
+                await supabaseClient
+                    .from('messages')
+                    .update({
+                        likes: supabaseClient.rpc('increment', { x: 1 })
+                    })
+                    .eq('id', messageId);
+                
+                showNotification('❤️ Сообщение понравилось!', 'success');
+                
+                // Обновляем отображение
+                const likeBtn = document.querySelector(`#message-${messageId} .action-btn`);
+                if (likeBtn) {
+                    const currentLikes = parseInt(likeBtn.textContent.match(/\d+/)) || 0;
+                    likeBtn.textContent = `❤️ ${currentLikes + 1}`;
+                }
+                
+                return true;
+                
+            } catch (error) {
+                console.error('Ошибка лайка:', error);
+                showNotification('❌ Ошибка лайка', 'error');
+                return false;
+            }
+        }
+        
+        // ========== ЖАЛОБЫ ==========
+        function showReportModal(messageId) {
+            selectedMessageForReport = messageId;
+            selectedReportReason = null;
+            document.getElementById('reportModal').style.display = 'flex';
+        }
+        
+        function selectReportReason(reason) {
+            selectedReportReason = reason;
+            
+            // Сбрасываем все выделения
+            document.querySelectorAll('.report-reason').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Выделяем выбранный
+            document.getElementById(`reason-${reason}`).classList.add('selected');
+            
+            // Показываем текстовое поле для "Другое"
+            const descriptionField = document.getElementById('reportDescription');
+            if (reason === 'other') {
+                descriptionField.style.display = 'block';
+                descriptionField.focus();
+            } else {
+                descriptionField.style.display = 'none';
+            }
+        }
+        
+        function resetReportModal() {
+            selectedMessageForReport = null;
+            selectedReportReason = null;
+            document.querySelectorAll('.report-reason').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.getElementById('reportDescription').style.display = 'none';
+            document.getElementById('reportDescription').value = '';
+        }
+        
+        async function submitReport() {
+            if (!selectedMessageForReport || !selectedReportReason) {
+                showNotification('Выберите причину жалобы', 'warning');
+                return;
+            }
+            
+            if (!currentUser.ok_id || !supabaseClient) {
+                showNotification('Ошибка авторизации', 'error');
+                return;
+            }
+            
+            try {
+                const description = selectedReportReason === 'other' 
+                    ? document.getElementById('reportDescription').value.trim()
+                    : '';
+                
+                const reportData = {
+                    message_id: selectedMessageForReport,
+                    reporter_ok_id: currentUser.ok_id,
+                    reason: selectedReportReason,
+                    description: description || null,
+                    created_at: new Date().toISOString()
+                };
+                
+                const { data, error } = await supabaseClient
+                    .from('reports')
+                    .insert(reportData)
+                    .select()
+                    .single();
+                    
+                if (error) throw error;
+                
+                // Увеличиваем счетчик жалоб в сообщении
+                await supabaseClient
+                    .from('messages')
+                    .update({
+                        report_count: supabaseClient.rpc('increment', { x: 1 })
+                    })
+                    .eq('id', selectedMessageForReport);
+                
+                showNotification('✅ Жалоба отправлена модераторам', 'success');
+                hideModal('reportModal');
+                
+            } catch (error) {
+                console.error('Ошибка отправки жалобы:', error);
+                showNotification('❌ Ошибка отправки жалобы', 'error');
+            }
+        }
+        
+        function showMessageOptions(messageId) {
+            // Можно добавить всплывающее меню с дополнительными опциями
+            console.log('Показать опции для сообщения:', messageId);
+        }
+        
+        // ========== REAL-TIME ПОДПИСКИ ==========
+        function subscribeToRealTimeUpdates() {
+            if (!supabaseClient) return;
+            
+            // Подписка на новые сообщения
+            const messagesChannel = supabaseClient
+                .channel('new-messages')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages'
+                }, (payload) => {
+                    console.log('Новое сообщение в реальном времени:', payload.new);
+                    // Можно добавить уведомление о новом сообщении
+                })
+                .subscribe();
+            
+            // Подписка на обновления онлайн статусов
+            const onlineChannel = supabaseClient
+                .channel('online-users')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'profiles'
+                }, (payload) => {
+                    if (payload.new.is_online && payload.old.is_online === false) {
+                        console.log('Пользователь онлайн:', payload.new.full_name);
+                    }
+                    // Обновляем счетчик онлайн
+                    loadOnlineCount();
+                })
+                .subscribe();
+            
+            // Сохраняем каналы для отписки при необходимости
+            window.supabaseChannels = {
+                messages: messagesChannel,
+                online: onlineChannel
+            };
+        }
+        
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function showAbout() {
             showNotification('🌊 ВМесте - эксклюзивное приложение для пользователей OK.ru', 'ok');
@@ -1160,17 +1605,53 @@
             showNotification('Профиль обновлен', 'success');
             loadUserStats();
             loadOnlineCount();
+            updateOnlineStatus(true);
         }
         
         // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📱 DOM загружен');
-            console.log('🚀 Приложение запущено через OK.ru');
+            console.log('🚀 Запуск приложения ВМесте для OK.ru');
             
-            // Даем время на загрузку OK SDK
+            // Ждем загрузки SDK OK.ru
+            let sdkLoaded = false;
+            
+            // Проверяем, загрузился ли SDK
+            function checkSDKLoaded() {
+                if (typeof FAPI !== 'undefined') {
+                    sdkLoaded = true;
+                    console.log('✅ OK SDK загружен');
+                    initApp();
+                } else {
+                    setTimeout(checkSDKLoaded, 100);
+                }
+            }
+            
+            // Запускаем проверку загрузки SDK
+            checkSDKLoaded();
+            
+            // Таймаут на случай, если SDK не загрузится
             setTimeout(() => {
-                initApp();
-            }, 500);
+                if (!sdkLoaded) {
+                    console.warn('Таймаут загрузки OK SDK, запускаем без него');
+                    initApp();
+                }
+            }, 5000);
+            
+            // Обработка ухода со страницы
+            window.addEventListener('beforeunload', function() {
+                if (currentUser.ok_id && supabaseClient) {
+                    // Помечаем пользователя как оффлайн
+                    updateOnlineStatus(false);
+                }
+            });
+            
+            // Обновляем онлайн статус каждую минуту
+            setInterval(() => {
+                if (currentUser.ok_id && supabaseClient) {
+                    updateOnlineStatus(true);
+                }
+            }, 60000);
         });
         
         // Делаем функции глобальными
@@ -1180,6 +1661,11 @@
         window.hideModal = hideModal;
         window.showAbout = showAbout;
         window.refreshProfile = refreshProfile;
+        window.likeMessage = likeMessage;
+        window.showReportModal = showReportModal;
+        window.selectReportReason = selectReportReason;
+        window.submitReport = submitReport;
+        window.showMessageOptions = showMessageOptions;
     </script>
 </body>
 </html>
