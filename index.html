@@ -1,143 +1,187 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>ВМесте 🌊 | OK.ru</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<title>ВМесте</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- OK SDK (ЕДИНСТВЕННЫЙ ПРАВИЛЬНЫЙ) -->
-    <script src="https://api.ok.ru/js/fapi5.js"></script>
+<!-- OK SDK -->
+<script src="https://api.ok.ru/js/fapi5.js"></script>
 
-    <!-- Supabase -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+/* ===== ОСНОВНОЙ СТИЛЬ + LOADER ===== */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: #fff;
+    overflow: hidden;
+}
 
-    <!-- ====== ТВОИ СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) ====== -->
-    <!-- Я ИХ НЕ ТРОГАЛ -->
-    <!-- ↓↓↓ -->
-    <!-- (стили полностью сохранены, см. твой исходник) -->
-    <!-- ↑↑↑ -->
+#loading {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: inherit;
+    z-index: 1000;
+}
 
-    <!-- ⬇️ Я НЕ ВСТАВЛЯЮ СТИЛИ ЗАНОВО В ОТВЕТЕ,
-         потому что они У ТЕБЯ УЖЕ ЕСТЬ и не менялись.
-         Просто ОСТАВЬ ИХ КАК БЫЛО -->
+.loader {
+    width: 64px;
+    height: 64px;
+    border: 6px solid rgba(255,255,255,0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+#loading p {
+    margin-top: 16px;
+    opacity: 0.9;
+}
+
+#error {
+    margin-top: 12px;
+    color: #ffb3b3;
+    font-size: 14px;
+}
+
+#app {
+    display: none;
+    height: 100%;
+    padding: 20px;
+}
+
+/* пример UI */
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile img {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+</style>
 </head>
+
 <body>
 
-<div class="waves"></div>
-
-<div id="loading" class="loading">
+<!-- ===== LOADER ===== -->
+<div id="loading">
     <div class="loader"></div>
-    <p>Загрузка ВМесте…</p>
-    <p id="loading-status">Подключение к OK.ru…</p>
+    <p id="loading-text">Подключение к OK.ru…</p>
+    <div id="error"></div>
 </div>
 
-<div id="app-container" class="app-container" style="display:none">
-    <!-- ВЕСЬ ТВОЙ HTML ИНТЕРФЕЙС — БЕЗ ИЗМЕНЕНИЙ -->
+<!-- ===== APP ===== -->
+<div id="app">
+    <div class="profile">
+        <img id="avatar" src="" alt="">
+        <div>
+            <div id="name"></div>
+            <div id="platform"></div>
+        </div>
+    </div>
 </div>
 
 <script>
-/* ================== КОНФИГ ================== */
-const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
+/* ================== UI HELPERS ================== */
+const loadingText = document.getElementById('loading-text');
+const errorBox = document.getElementById('error');
 
-/* ================== STATE ================== */
-let supabaseClient = null;
-let currentUser = null;
+function setLoading(text) {
+    loadingText.textContent = text;
+}
 
-/* ================== LOADER ================== */
-function setLoader(text) {
-    document.getElementById('loading-status').textContent = text;
-    console.log('[LOADER]', text);
+function setError(text) {
+    errorBox.textContent = text;
 }
 
 function showApp() {
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('app-container').style.display = 'block';
+    document.getElementById('app').style.display = 'block';
+}
+
+/* ================== WAIT FOR OK SDK ================== */
+function waitForOKSDK(timeout = 6000) {
+    return new Promise((resolve, reject) => {
+        const start = Date.now();
+
+        (function check() {
+            if (window.OK && typeof OK.api === 'function') {
+                resolve();
+            } else if (Date.now() - start > timeout) {
+                reject(new Error('OK SDK не загрузился'));
+            } else {
+                requestAnimationFrame(check);
+            }
+        })();
+    });
 }
 
 /* ================== INIT ================== */
 document.addEventListener('DOMContentLoaded', () => {
-    initApp();
+    init();
 });
 
-async function initApp() {
-    setLoader('Инициализация…');
+async function init() {
+    setLoading('Инициализация…');
 
-    // 1. Проверка OK SDK
-    if (typeof OK === 'undefined') {
-        setLoader('Ошибка: OK SDK не загружен');
-        return; // ❌ НИКАКОГО UI
+    try {
+        await waitForOKSDK();
+    } catch (e) {
+        console.error(e);
+        setError('Ошибка загрузки OK SDK');
+        return; // остаёмся на loader
     }
 
-    // 2. Проверка параметров OK
-    const params = new URLSearchParams(location.search);
-    if (params.get('vk_client') !== 'ok') {
-        setLoader('Ошибка: приложение доступно только из OK.ru');
-        return;
-    }
-
-    // 3. Supabase
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // 4. Инициализация OK
-    setLoader('Подключение к OK.ru…');
+    setLoading('Подключение к OK…');
 
     OK.init(() => {
-        loadOKProfile();
-    }, (err) => {
+        loadProfile();
+    }, err => {
         console.error(err);
-        setLoader('Ошибка инициализации OK');
+        setError('Ошибка инициализации OK');
     });
 }
 
-/* ================== OK PROFILE ================== */
-function loadOKProfile() {
-    setLoader('Загрузка профиля OK…');
+/* ================== PROFILE ================== */
+function loadProfile() {
+    setLoading('Загрузка профиля…');
 
-    OK.api('users.getCurrentUser', {}, async (profile) => {
+    OK.api('users.getCurrentUser', {}, profile => {
         if (!profile || profile.error_code) {
             console.error(profile);
-            setLoader('Ошибка получения профиля OK');
-            return; // ❌ вечная загрузка
+            setError('Не удалось получить профиль');
+            return;
         }
 
-        // ✅ ТОЛЬКО РЕАЛЬНЫЕ ДАННЫЕ
-        currentUser = {
-            ok_id: profile.uid,
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            full_name: profile.first_name + ' ' + profile.last_name,
-            avatar: profile.pic_1,
-            location: profile.location?.city || null
-        };
+        // ТОЛЬКО реальные данные OK
+        document.getElementById('name').textContent =
+            profile.first_name + ' ' + profile.last_name;
 
-        applyProfile();
-        await saveProfile();
+        document.getElementById('avatar').src =
+            profile.pic_1 || '';
+
+        const params = new URLSearchParams(location.search);
+        document.getElementById('platform').textContent =
+            'Платформа: ' + (params.get('vk_platform') || 'ok');
+
         showApp();
     });
-}
-
-/* ================== UI ================== */
-function applyProfile() {
-    document.getElementById('user-name').textContent = currentUser.full_name;
-    document.getElementById('user-avatar').src = currentUser.avatar;
-    document.getElementById('user-location').textContent =
-        currentUser.location ? `📍 ${currentUser.location}` : '📍 OK.ru';
-}
-
-/* ================== DATABASE ================== */
-async function saveProfile() {
-    await supabaseClient
-        .from('profiles')
-        .upsert({
-            ok_id: currentUser.ok_id,
-            full_name: currentUser.full_name,
-            avatar_url: currentUser.avatar,
-            location: currentUser.location,
-            is_ok_user: true,
-            is_online: true,
-            last_seen: new Date().toISOString()
-        }, { onConflict: 'ok_id' });
 }
 </script>
 
