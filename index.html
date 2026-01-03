@@ -2,169 +2,189 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>ВМесте</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ВМесте 🌊 | OK.ru</title>
 
-<!-- VK Bridge (обязателен) -->
+<!-- VK Bridge -->
 <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 
+<!-- Supabase -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
 <style>
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    color: #fff;
-    overflow: hidden;
+/* ====== СТИЛИ (СОКРАЩЕНО БЕЗ ПОТЕРИ ВИДА) ====== */
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont;
+  background:linear-gradient(135deg,#0F2027,#203A43,#2C5364);
+  color:#fff;
 }
-
-/* ===== LOADER ===== */
-#loading {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: inherit;
-    z-index: 1000;
+#loading{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
-
-.loader {
-    width: 64px;
-    height: 64px;
-    border: 6px solid rgba(255,255,255,0.2);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+.loader{
+  width:40px;height:40px;
+  border:4px solid rgba(255,255,255,.2);
+  border-top-color:#EE8C3A;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
 }
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
+@keyframes spin{to{transform:rotate(360deg)}}
+.app{display:none;max-width:1200px;margin:auto;padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:28px;font-weight:700}
+.profile-card,.ocean{
+  background:rgba(255,255,255,.05);
+  border-radius:20px;
+  padding:20px;
 }
-
-#loading p {
-    margin-top: 16px;
-    opacity: 0.9;
+.avatar{
+  width:70px;height:70px;border-radius:50%;
+  border:3px solid #EE8C3A;
 }
-
-#error {
-    margin-top: 12px;
-    color: #ffb3b3;
-    font-size: 14px;
-    text-align: center;
-    max-width: 80%;
+.btn{
+  padding:14px;border:none;border-radius:14px;
+  cursor:pointer;font-weight:600;
 }
-
-/* ===== APP ===== */
-#app {
-    display: none;
-    height: 100%;
-    padding: 20px;
+.btn-primary{
+  background:linear-gradient(45deg,#EE8C3A,#4A90E2);
+  color:#fff;
 }
-
-.profile {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.profile img {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: rgba(255,255,255,0.2);
-}
-
-.name {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.platform {
-    font-size: 14px;
-    opacity: 0.8;
+.message{
+  background:rgba(255,255,255,.1);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:12px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ===== LOADING ===== -->
 <div id="loading">
-    <div class="loader"></div>
-    <p id="loading-text">Инициализация…</p>
-    <div id="error"></div>
+  <div class="loader"></div>
+  <p id="loadingText">Инициализация...</p>
 </div>
 
-<!-- ===== APP ===== -->
-<div id="app">
-    <div class="profile">
-        <img id="avatar" alt="avatar">
-        <div>
-            <div id="name" class="name"></div>
-            <div id="platform" class="platform"></div>
-        </div>
+<div class="app" id="app">
+  <div class="header">
+    <div class="logo">🌊 ВМесте</div>
+    <div>OK.ru</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;margin-top:20px">
+    
+    <!-- PROFILE -->
+    <div class="profile-card">
+      <img id="avatar" class="avatar">
+      <h3 id="name"></h3>
+      <p id="location">OK.ru</p>
+      <button class="btn btn-primary" onclick="openSend()">✍️ Бросить послание</button>
     </div>
+
+    <!-- OCEAN -->
+    <div class="ocean">
+      <h2>🌊 Океан посланий</h2>
+      <div id="messages"></div>
+      <button class="btn btn-primary" onclick="catchMessage()">🎣 Поймать послание</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);align-items:center;justify-content:center">
+  <div style="background:#1A1A2E;padding:20px;border-radius:16px;width:90%;max-width:400px">
+    <textarea id="text" style="width:100%;height:120px"></textarea>
+    <button class="btn btn-primary" onclick="sendMessage()">Отправить</button>
+  </div>
 </div>
 
 <script>
-/* ================== UI ================== */
-const loadingText = document.getElementById('loading-text');
-const errorBox = document.getElementById('error');
+/* ===== CONFIG ===== */
+const SUPABASE_URL = 'https://pyhatmplhbogwufatdga.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_rEZH-AdtzcBxBGeEA1hthQ_Ev3YtQ6d';
 
-function setLoading(text) {
-    loadingText.textContent = text;
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+
+/* ===== INIT ===== */
+async function init(){
+  await vkBridge.send('VKWebAppInit');
+
+  const user = await vkBridge.send('VKWebAppGetUserInfo');
+
+  currentUser = {
+    ok_id: user.id.toString(),
+    first_name: user.first_name,
+    last_name: user.last_name,
+    full_name: user.first_name + ' ' + user.last_name,
+    avatar_url: user.photo_100,
+    location: 'Одноклассники'
+  };
+
+  document.getElementById('name').textContent = currentUser.full_name;
+  document.getElementById('avatar').src = currentUser.avatar_url;
+
+  await supabase.from('profiles').upsert(currentUser);
+
+  await loadMessages();
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
 }
 
-function setError(text) {
-    errorBox.textContent = text;
+/* ===== MESSAGES ===== */
+async function loadMessages(){
+  const { data } = await supabase
+    .from('messages')
+    .select('*')
+    .order('created_at',{ascending:false})
+    .limit(5);
+
+  const box = document.getElementById('messages');
+  box.innerHTML = '';
+
+  data.forEach(m=>{
+    box.innerHTML += `
+      <div class="message">
+        "${m.content}"
+        <div style="opacity:.7;font-size:12px">${new Date(m.created_at).toLocaleString()}</div>
+      </div>`;
+  });
 }
 
-function showApp() {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
+function openSend(){
+  document.getElementById('modal').style.display='flex';
 }
 
-/* ================== INIT ================== */
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        setLoading('Подключение к платформе…');
+async function sendMessage(){
+  const text = document.getElementById('text').value.trim();
+  if(!text) return;
 
-        // Инициализация VK Mini App (работает и в OK)
-        await vkBridge.send('VKWebAppInit');
+  await supabase.from('messages').insert({
+    content:text,
+    sender_ok_id:currentUser.ok_id,
+    sender_name:currentUser.full_name,
+    sender_avatar:currentUser.avatar_url
+  });
 
-        loadProfile();
-    } catch (e) {
-        console.error(e);
-        setError('Ошибка инициализации приложения');
-    }
-});
-
-/* ================== PROFILE ================== */
-async function loadProfile() {
-    try {
-        setLoading('Загрузка профиля…');
-
-        const user = await vkBridge.send('VKWebAppGetUserInfo');
-
-        document.getElementById('name').textContent =
-            user.first_name + ' ' + user.last_name;
-
-        document.getElementById('avatar').src =
-            user.photo_100 || '';
-
-        document.getElementById('platform').textContent =
-            'Платформа: Одноклассники (VK Mini App)';
-
-        showApp();
-    } catch (e) {
-        console.error(e);
-        setError('Не удалось получить профиль пользователя');
-    }
+  document.getElementById('modal').style.display='none';
+  document.getElementById('text').value='';
+  loadMessages();
 }
+
+async function catchMessage(){
+  await loadMessages();
+}
+
+/* ===== START ===== */
+document.addEventListener('DOMContentLoaded',init);
 </script>
 
 </body>
